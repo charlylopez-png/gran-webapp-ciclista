@@ -1,26 +1,26 @@
 {
-  "name": "UKT — Udaberriko Klasiko Txirrindulariak",
-  "short_name": "UKT",
-  "description": "La porra ciclista de las clásicas de primavera entre amigos.",
+  "name": "TXapp",
+  "short_name": "TXapp",
+  "description": "Todas tus porras ciclistas (UKT, Mundial, Giro, Tour y Vuelta) en una sola cuenta.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d2c20",
   "theme_color": "#0d2c20",
   "icons": [
     {
-      "src": "/ukt-identity/png/ukt-icon-192.png",
+      "src": "/tx-identity/png/tx-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/ukt-identity/png/ukt-icon-512-cobble.png",
+      "src": "/tx-identity/png/tx-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/ukt-identity/png/ukt-icon-512-cobble.png",
+      "src": "/tx-identity/png/tx-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

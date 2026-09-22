@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="TXapp">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f3325"/>
+      <stop offset="100%" stop-color="#071a11"/>
+    </linearGradient>
+    <!-- Banda arcoíris UCI (mismos colores que .competition-mundial-stripe
+         en globals.css: azul, rojo, negro, amarillo, verde), aplicada como
+         relleno de las letras en vez de como franja aparte. -->
+    <linearGradient id="uci" gradientUnits="userSpaceOnUse" x1="0" y1="95" x2="0" y2="300">
+      <stop offset="0%" stop-color="#007abe"/>
+      <stop offset="20%" stop-color="#007abe"/>
+      <stop offset="20%" stop-color="#d92933"/>
+      <stop offset="40%" stop-color="#d92933"/>
+      <stop offset="40%" stop-color="#181719"/>
+      <stop offset="60%" stop-color="#181719"/>
+      <stop offset="60%" stop-color="#ffec00"/>
+      <stop offset="80%" stop-color="#ffec00"/>
+      <stop offset="80%" stop-color="#39a640"/>
+      <stop offset="100%" stop-color="#39a640"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="114" fill="url(#bg)"/>
+  <text x="256" y="298" text-anchor="middle" font-family="Archivo Black, Arial Black, DejaVu Sans, sans-serif" font-weight="bold" font-stretch="condensed" font-size="248" letter-spacing="-10" fill="url(#uci)">TX</text>
+  <!-- Cuatro puntos: las tres categorías de corredor (verde/rosa/amarillo)
+       más el rojo de la Vuelta. -->
+  <g>
+    <circle cx="169" cy="396" r="20" fill="#5fc79b"/>
+    <circle cx="227" cy="396" r="20" fill="#f58fb0"/>
+    <circle cx="285" cy="396" r="20" fill="#e9c03a"/>
+    <circle cx="343" cy="396" r="20" fill="#d92933"/>
+  </g>
+</svg>
