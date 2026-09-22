@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@import "flag-icons/css/flag-icons.min.css";
+
+/* ---------------------------------------------------------------
+   UKT — identidad de marca (Udaberriko Klasiko Txirrindulariak)
+   Adoquinado + verde de pelotón. Tema único (sin variante clara):
+   la marca no define un modo claro, así que se usa el mismo verde
+   oscuro en toda la app.
+   --------------------------------------------------------------- */
+
+:root {
+  /* --- Superficies (escala de verdes de la marca) --- */
+  --bg: #0d2c20; /* ukt-green-800: fondo base de la app */
+  --surface: #123c2b; /* ukt-green-700: tarjetas */
+  --surface-2: #1a4c36; /* ukt-green-600: hover / superficie secundaria */
+  --bg-app-gradient: linear-gradient(160deg, #0d2c20 0%, #17422f 55%, #0f3325 100%);
+
+  /* --- Texto --- */
+  --text: #eef3e7; /* ukt-bone */
+  --text-soft: rgba(238, 243, 231, 0.7);
+  --text-faint: rgba(238, 243, 231, 0.45);
+  --line: rgba(238, 243, 231, 0.14);
+
+  /* --- Acentos de marca --- */
+  --accent-verde: #5fc79b; /* ukt-mint-400: acento de información */
+  --accent-verde-deep: #5fc79b; /* mismo menta, para títulos/labels con más peso */
+  --accent-amarillo: #e9c03a; /* ukt-yellow-400: acción principal */
+  --accent-gold: #c8901a; /* ukt-gold-500: hover del botón principal */
+  --accent-rosa: #f58fb0; /* ukt-pink-400: solo categoría / coeficiente */
+  --on-accent: #123c2b; /* texto sobre cualquier acento sólido (nunca blanco) */
+
+  /* --- Cabecera / hero con textura de adoquinado --- */
+  --hero-bg-1: #071a11; /* ukt-green-950 */
+  --hero-bg-2: #123c2b; /* ukt-green-700 */
+  --hero-text: #eef3e7;
+
+  --pill-bg: rgba(238, 243, 231, 0.08);
+  --pill-text: #eef3e7;
+  --shadow: rgba(4, 16, 10, 0.45);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-soft: var(--text-soft);
+  --color-line: var(--line);
+  --color-verde: var(--accent-verde);
+  --color-verde-deep: var(--accent-verde-deep);
+  --color-amarillo: var(--accent-amarillo);
+  --color-gold: var(--accent-gold);
+  --color-rosa: var(--accent-rosa);
+  --color-on-accent: var(--on-accent);
+  --font-display: var(--font-oswald);
+  --font-body: var(--font-nunito);
+  --font-logo: var(--font-archivo);
+}
+
+body {
+  margin: 0;
+  background: var(--bg-app-gradient);
+  color: var(--text);
+  font-family: var(--font-body), sans-serif;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+}
+
+.font-logo {
+  font-family: var(--font-logo), "Arial Black", sans-serif;
+  letter-spacing: -0.02em;
+  line-height: 0.8;
+}
+
+/* ---------------------------------------------------------------
+   Tema por competición: cada sección/juego (Giro, Tour, Vuelta,
+   Mundial, Liga Clásicas, y las que se añadan) puede sobreescribir
+   fondo/superficies/línea/acento de cabeceras para que se note al
+   entrar en qué juego estás. Los colores de categoría
+   (amarillo/rosa/verde) se dejan siempre intactos: significan lo
+   mismo en todas partes. Clásicas no necesita clase propia: es el
+   tema por defecto en :root de arriba.
+
+   Para añadir el tema de una competición nueva: una clase
+   `.competition-<slug>` aquí (mismo patrón que `.competition-mundial`)
+   y, si quieres franja de color bajo la cabecera, una
+   `.competition-<slug>-stripe`; regístrala en
+   src/lib/competition-theme.ts.
+   --------------------------------------------------------------- */
+.competition-mundial {
+  --bg: #12131d;
+  --surface: #1b1d2c;
+  --surface-2: #262842;
+  --bg-app-gradient: linear-gradient(160deg, #12131d 0%, #1a1c2e 55%, #101120 100%);
+  --line: rgba(238, 243, 231, 0.14);
+  --accent-verde-deep: #4fa8e6;
+  --pill-bg: rgba(79, 168, 230, 0.12);
+  background: var(--bg-app-gradient);
+  min-height: 100%;
+}
+
+.competition-mundial-stripe {
+  height: 6px;
+  background: linear-gradient(
+    to right,
+    #007abe 0% 20%,
+    #d92933 20% 40%,
+    #181719 40% 60%,
+    #ffec00 60% 80%,
+    #39a640 80% 100%
+  );
+}

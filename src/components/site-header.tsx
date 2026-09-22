@@ -1,0 +1,91 @@
+import Image from "next/image";
+import Link from "next/link";
+import type { SessionPayload } from "@/lib/auth";
+import type { Competition } from "@/lib/competitions-data";
+import LogoutButton from "@/components/logout-button";
+import MobileNav from "@/components/mobile-nav";
+import Logo from "@/components/logo";
+
+type NavItem = { href: string; label: string; icon?: string };
+
+export default function SiteHeader({
+  session,
+  competitions,
+}: {
+  session: SessionPayload | null;
+  competitions: Competition[];
+}) {
+  const navItems: NavItem[] = [{ href: "/reglamento", label: "Reglamento" }];
+  if (session?.status === "approved") {
+    for (const c of competitions) {
+      navItems.push({
+        href: `/${c.slug}`,
+        label: c.short_name ?? c.name,
+        icon: c.logo_path ?? undefined,
+      });
+    }
+  }
+  if (session?.role === "admin") {
+    navItems.push({ href: "/admin", label: "Admin" });
+  }
+
+  return (
+    <header className="sticky top-0 z-20 relative border-b border-line bg-[var(--bg)]/92 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-5 py-2.5">
+        <Link href="/" aria-label="UKT — Inicio" className="shrink-0">
+          <Logo className="h-8 w-auto sm:h-9" />
+        </Link>
+
+        <nav className="hidden items-center gap-1 sm:flex">
+          {navItems.map((item) => (
+            <NavLink key={item.href} href={item.href} icon={item.icon}>
+              {item.label}
+            </NavLink>
+          ))}
+          <AuthActions session={session} />
+        </nav>
+
+        <MobileNav items={navItems}>
+          <AuthActions session={session} />
+        </MobileNav>
+      </div>
+    </header>
+  );
+}
+
+function AuthActions({ session }: { session: SessionPayload | null }) {
+  if (session) {
+    return <LogoutButton />;
+  }
+  return (
+    <div className="flex items-center gap-2 sm:gap-2">
+      <NavLink href="/login">Entrar</NavLink>
+      <Link
+        href="/signup"
+        className="rounded-full bg-amarillo px-4 py-2.5 text-center font-display text-xs uppercase tracking-wide text-on-accent hover:bg-gold sm:ml-1 sm:px-3.5 sm:py-2"
+      >
+        Crear cuenta
+      </Link>
+    </div>
+  );
+}
+
+function NavLink({
+  href,
+  icon,
+  children,
+}: {
+  href: string;
+  icon?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-display text-xs uppercase tracking-wide text-[var(--pill-text)] hover:bg-[var(--pill-bg)]"
+    >
+      {icon && <Image src={icon} alt="" width={16} height={16} className="rounded-full" />}
+      {children}
+    </Link>
+  );
+}
