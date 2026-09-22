@@ -28,6 +28,23 @@ export default async function CompetitionHomePage({
     );
   }
 
+  // Giro/Tour/Vuelta: dadas de alta para reservar su hueco en la portada,
+  // pero su motor de fichaje por presupuesto todavía no existe. Ni
+  // creamos equipo ni enlazamos a /equipo (que da 404 a propósito para
+  // este game_type) hasta que esa pantalla exista.
+  if (competition.game_type !== "squad_color" || !competition.squad_composition) {
+    return (
+      <div className="rounded-2xl border border-line bg-surface p-4">
+        <h2 className="font-display text-sm text-verde-deep">Muy pronto</h2>
+        <p className="mt-1 text-sm text-text-soft">
+          El fichaje por presupuesto de {competition.short_name ?? competition.name}{" "}
+          está en marcha. En cuanto esté listo el reglamento y los corredores,
+          podrás armar tu equipo aquí.
+        </p>
+      </div>
+    );
+  }
+
   const { activeTeam } = await getActiveTeam(session.userId, competition.id);
   const [{ count }] = (await sql`
     select count(*)::int as count from team_squad where team_id = ${activeTeam.id}

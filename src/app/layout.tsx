@@ -25,24 +25,24 @@ const archivoBlack = Archivo_Black({
 });
 
 export const metadata: Metadata = {
-  title: "UKT — Porra de las Clásicas de Primavera",
+  title: "TXapp",
   description:
-    "Udaberriko Klasiko Txirrindulariak: la porra ciclista de las clásicas de primavera entre amigos.",
+    "TXapp: todas tus porras ciclistas (UKT, Mundial, Giro, Tour y Vuelta) en una sola cuenta.",
   manifest: "/manifest.json",
   icons: {
     icon: [
-      { url: "/ukt-identity/png/ukt-icon-32-favicon.png", sizes: "32x32", type: "image/png" },
-      { url: "/ukt-identity/png/ukt-icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/ukt-identity/png/ukt-icon-512-cobble.png", sizes: "512x512", type: "image/png" },
+      { url: "/tx-identity/png/tx-icon-32-favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/tx-identity/png/tx-icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/tx-identity/png/tx-icon-512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/ukt-identity/png/ukt-icon-180-apple.png", sizes: "180x180", type: "image/png" },
+      { url: "/tx-identity/png/tx-icon-180-apple.png", sizes: "180x180", type: "image/png" },
     ],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "UKT",
+    title: "TXapp",
   },
 };
 

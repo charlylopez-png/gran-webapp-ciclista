@@ -2,10 +2,9 @@
 // una (ver src/app/globals.css) para que la apariencia cambie al entrar
 // en cada sección. Clave = `competitions.theme_color`.
 //
-// Clásicas no está aquí: al no tener preset, se queda con el tema por
-// defecto de :root (verde/amarillo/rosa UKT). Cuando se den de alta
-// Giro/Tour/Vuelta (Tarea pendiente: motor budget_draft) hay que añadir
-// aquí su preset y las clases correspondientes en globals.css.
+// Clásicas (UKT) no está aquí: al no tener preset, se queda con el tema
+// por defecto de :root (verde/amarillo/rosa UKT), que es también la
+// identidad general de TXapp.
 export type CompetitionTheme = {
   scopeClassName?: string;
   stripeClassName?: string;
@@ -15,6 +14,18 @@ const THEMES: Record<string, CompetitionTheme> = {
   mundial: {
     scopeClassName: "competition-mundial",
     stripeClassName: "competition-mundial-stripe",
+  },
+  giro: {
+    scopeClassName: "competition-giro",
+    stripeClassName: "competition-giro-stripe",
+  },
+  tour: {
+    scopeClassName: "competition-tour",
+    stripeClassName: "competition-tour-stripe",
+  },
+  vuelta: {
+    scopeClassName: "competition-vuelta",
+    stripeClassName: "competition-vuelta-stripe",
   },
 };
 

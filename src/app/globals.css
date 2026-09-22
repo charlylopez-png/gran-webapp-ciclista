@@ -118,3 +118,57 @@ h3,
     #39a640 80% 100%
   );
 }
+
+/* Il Giro d'Italia — maglia rosa */
+.competition-giro {
+  --bg: #1d0f18;
+  --surface: #2a1522;
+  --surface-2: #3a1c2e;
+  --bg-app-gradient: linear-gradient(160deg, #1d0f18 0%, #2a1522 55%, #190d15 100%);
+  --line: rgba(238, 243, 231, 0.14);
+  --accent-verde-deep: #f06aa0;
+  --pill-bg: rgba(240, 106, 160, 0.14);
+  background: var(--bg-app-gradient);
+  min-height: 100%;
+}
+
+.competition-giro-stripe {
+  height: 6px;
+  background: #f06aa0;
+}
+
+/* Le Tour de France — maillot jaune */
+.competition-tour {
+  --bg: #1f1a0a;
+  --surface: #2b2410;
+  --surface-2: #3a3015;
+  --bg-app-gradient: linear-gradient(160deg, #1f1a0a 0%, #2b2410 55%, #191509 100%);
+  --line: rgba(238, 243, 231, 0.14);
+  --accent-verde-deep: #f2c230;
+  --pill-bg: rgba(242, 194, 48, 0.14);
+  background: var(--bg-app-gradient);
+  min-height: 100%;
+}
+
+.competition-tour-stripe {
+  height: 6px;
+  background: #f2c230;
+}
+
+/* La Vuelta a España — maillot rojo */
+.competition-vuelta {
+  --bg: #200b0b;
+  --surface: #2e1010;
+  --surface-2: #3d1616;
+  --bg-app-gradient: linear-gradient(160deg, #200b0b 0%, #2e1010 55%, #190808 100%);
+  --line: rgba(238, 243, 231, 0.14);
+  --accent-verde-deep: #e5514a;
+  --pill-bg: rgba(229, 81, 74, 0.14);
+  background: var(--bg-app-gradient);
+  min-height: 100%;
+}
+
+.competition-vuelta-stripe {
+  height: 6px;
+  background: #e5514a;
+}

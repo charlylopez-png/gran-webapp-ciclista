@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import Logo from "@/components/logo";
 import CobbleBackground from "@/components/cobble-background";
 import { listVisibleCompetitions } from "@/lib/competitions-data";
 
@@ -23,21 +23,19 @@ export default async function Home() {
         />
         <div className="relative mx-auto max-w-3xl">
           <span className="inline-block rounded-full border border-white/40 px-3 py-1 font-display text-[11px] uppercase tracking-[0.16em]">
-            Reglamento oficial · 2027
+            Temporada 2027
           </span>
-          <h1 className="mt-5">
-            <Logo className="h-16 w-auto sm:h-20" color="var(--hero-text)" />
+          <h1 className="mt-5 font-logo text-5xl leading-none sm:text-6xl">
+            TX<span className="text-amarillo">app</span>
           </h1>
-          <div className="mt-3 font-display text-sm uppercase tracking-wide text-amarillo">
-            Udaberriko Klasiko Txirrindulariak
-          </div>
-          <p className="mt-1 font-display text-xl normal-case">
+          <p className="mt-3 font-display text-xl normal-case">
             Todas tus porras ciclistas, en un solo sitio
           </p>
           <p className="mt-5 max-w-xl border-l-2 border-amarillo pl-4 text-sm leading-relaxed text-white/90">
             Una cuenta, un maestro de corredores World Tour y ProTeam, y una
-            competición por cada carrera: elige la tuya, arma tu equipo y
-            pelea la general con la cuadrilla.
+            competición por cada carrera — UKT, Mundial, Giro, Tour y
+            Vuelta: elige la tuya, arma tu equipo y pelea la general con la
+            cuadrilla.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -45,12 +43,6 @@ export default async function Home() {
               className="rounded-full bg-amarillo px-5 py-2.5 font-display text-xs uppercase tracking-wide text-on-accent hover:bg-gold"
             >
               Apuntarme a la porra
-            </Link>
-            <Link
-              href="/reglamento"
-              className="rounded-full border border-white/40 px-5 py-2.5 font-display text-xs uppercase tracking-wide text-white"
-            >
-              Ver el reglamento
             </Link>
           </div>
         </div>
@@ -63,12 +55,30 @@ export default async function Home() {
             <Link
               key={c.id}
               href={`/${c.slug}`}
-              className="rounded-2xl border border-line bg-surface p-4 hover:border-verde-deep/50"
+              className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 hover:border-verde-deep/50"
             >
-              <div className="font-display text-[11px] uppercase tracking-wide text-text-soft">
-                {c.season} · {c.status === "active" ? "En marcha" : "Próximamente"}
+              {c.logo_path ? (
+                <Image
+                  src={c.logo_path}
+                  alt=""
+                  width={44}
+                  height={44}
+                  className="h-11 w-11 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  aria-hidden
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--pill-bg)] font-display text-xs text-text-soft"
+                >
+                  {(c.short_name ?? c.name).slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <div className="font-display text-[11px] uppercase tracking-wide text-text-soft">
+                  {c.season} · {c.status === "active" ? "En marcha" : "Próximamente"}
+                </div>
+                <div className="mt-1 font-display text-lg text-verde-deep">{c.name}</div>
               </div>
-              <div className="mt-1 font-display text-lg text-verde-deep">{c.name}</div>
             </Link>
           ))}
           {competitions.length === 0 && (

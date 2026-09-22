@@ -4,7 +4,6 @@ import type { SessionPayload } from "@/lib/auth";
 import type { Competition } from "@/lib/competitions-data";
 import LogoutButton from "@/components/logout-button";
 import MobileNav from "@/components/mobile-nav";
-import Logo from "@/components/logo";
 
 type NavItem = { href: string; label: string; icon?: string };
 
@@ -15,7 +14,10 @@ export default function SiteHeader({
   session: SessionPayload | null;
   competitions: Competition[];
 }) {
-  const navItems: NavItem[] = [{ href: "/reglamento", label: "Reglamento" }];
+  // El reglamento ya no es un enlace global: cada competición tiene el
+  // suyo propio (distinto entre UKT, Mundial y grandes vueltas), así que
+  // vive dentro de su subnav (ver [slug]/layout.tsx) y no aquí.
+  const navItems: NavItem[] = [];
   if (session?.status === "approved") {
     for (const c of competitions) {
       navItems.push({
@@ -32,8 +34,12 @@ export default function SiteHeader({
   return (
     <header className="sticky top-0 z-20 relative border-b border-line bg-[var(--bg)]/92 backdrop-blur-sm">
       <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-5 py-2.5">
-        <Link href="/" aria-label="UKT — Inicio" className="shrink-0">
-          <Logo className="h-8 w-auto sm:h-9" />
+        <Link
+          href="/"
+          aria-label="TXapp — Inicio"
+          className="shrink-0 font-logo text-lg leading-none text-[var(--pill-text)] sm:text-xl"
+        >
+          TX<span className="text-amarillo">app</span>
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">

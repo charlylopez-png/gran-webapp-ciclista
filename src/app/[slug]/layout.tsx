@@ -48,13 +48,18 @@ export default async function CompetitionLayout({
           </p>
         )}
 
-        {session?.status === "approved" && (
-          <nav className="mt-5 flex flex-wrap gap-1.5">
-            <SubNavLink href={`/${slug}`}>Resumen</SubNavLink>
-            <SubNavLink href={`/${slug}/equipo`}>Mi equipo</SubNavLink>
-            <SubNavLink href={`/${slug}/clasificacion`}>Clasificación</SubNavLink>
-          </nav>
-        )}
+        <nav className="mt-5 flex flex-wrap gap-1.5">
+          {session?.status === "approved" && (
+            <>
+              <SubNavLink href={`/${slug}`}>Resumen</SubNavLink>
+              {competition.game_type === "squad_color" && competition.squad_composition && (
+                <SubNavLink href={`/${slug}/equipo`}>Mi equipo</SubNavLink>
+              )}
+              <SubNavLink href={`/${slug}/clasificacion`}>Clasificación</SubNavLink>
+            </>
+          )}
+          <SubNavLink href={`/${slug}/reglamento`}>Reglamento</SubNavLink>
+        </nav>
 
         <div className="mt-6 pb-10">{children}</div>
       </div>
