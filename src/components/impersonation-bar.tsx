@@ -15,7 +15,7 @@ export default function ImpersonationBar({ actingAsName }: { actingAsName: strin
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2.5 bg-amarillo px-4 py-2 text-center font-display text-[11px] uppercase tracking-wide text-on-accent">
+    <div className="flex flex-wrap items-center justify-center gap-2.5 bg-[var(--accent)] px-4 py-2 text-center font-display text-[11px] uppercase tracking-wide text-on-accent">
       <span>Actuando como {actingAsName}</span>
       <button
         type="button"

@@ -198,7 +198,7 @@ export default function SquadSelector({
             type="button"
             disabled={!canSave || isPending}
             onClick={save}
-            className="ml-auto rounded-full bg-amarillo px-4 py-2.5 font-display text-sm uppercase tracking-wide text-on-accent hover:bg-gold disabled:opacity-40"
+            className="ml-auto rounded-full bg-[var(--accent)] px-4 py-2.5 font-display text-sm uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-40"
           >
             {isPending ? "Guardando…" : `Guardar (${total}/${squadSize})`}
           </button>

@@ -96,10 +96,7 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
         ))}
       </div>
 
-      <div
-        className="mt-8 rounded-2xl p-6 text-[var(--hero-text)]"
-        style={{ background: "var(--hero-bg-1)" }}
-      >
+      <div className="mt-8 rounded-2xl bg-surface p-6 text-text">
         <h2 className="font-display text-xs tracking-wide text-amarillo">
           Fórmula de puntuación de cada corredor
         </h2>

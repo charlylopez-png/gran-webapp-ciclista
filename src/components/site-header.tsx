@@ -36,10 +36,10 @@ export default function SiteHeader({
       <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-5 py-2.5">
         <Link
           href="/"
-          aria-label="TXapp — Inicio"
-          className="shrink-0 font-logo text-lg leading-none text-[var(--pill-text)] sm:text-xl"
+          aria-label="txirrindulariAPP — Inicio"
+          className="shrink-0 font-logo text-lg leading-none text-text sm:text-xl"
         >
-          TX<span className="text-amarillo">app</span>
+          txirrindulari<span className="logo-app">APP</span>
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">
@@ -68,7 +68,7 @@ function AuthActions({ session }: { session: SessionPayload | null }) {
       <NavLink href="/login">Entrar</NavLink>
       <Link
         href="/signup"
-        className="rounded-full bg-amarillo px-4 py-2.5 text-center font-display text-xs uppercase tracking-wide text-on-accent hover:bg-gold sm:ml-1 sm:px-3.5 sm:py-2"
+        className="rounded-full bg-[var(--accent)] px-4 py-2.5 text-center font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 sm:ml-1 sm:px-3.5 sm:py-2"
       >
         Crear cuenta
       </Link>
@@ -88,7 +88,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-display text-xs uppercase tracking-wide text-[var(--pill-text)] hover:bg-[var(--pill-bg)]"
+      className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-display text-xs uppercase tracking-wide text-text hover:bg-surface-2"
     >
       {icon && <Image src={icon} alt="" width={16} height={16} className="rounded-full" />}
       {children}

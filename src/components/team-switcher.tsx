@@ -110,7 +110,7 @@ export default function TeamSwitcher({
               type="button"
               disabled={!newName.trim() || isPending}
               onClick={createTeam}
-              className="rounded-full bg-amarillo px-3.5 py-2 text-sm font-semibold text-on-accent disabled:opacity-40"
+              className="rounded-full bg-[var(--accent)] px-3.5 py-2 text-sm font-semibold text-on-accent hover:brightness-110 disabled:opacity-40"
             >
               Crear
             </button>

@@ -41,7 +41,7 @@ export default function ManualPlayerForm() {
       <button
         type="submit"
         disabled={isPending || !name.trim()}
-        className="shrink-0 rounded-full bg-amarillo px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:bg-gold disabled:opacity-40"
+        className="shrink-0 rounded-full bg-[var(--accent)] px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-40"
       >
         {isPending ? "Añadiendo…" : "+ Añadir"}
       </button>
