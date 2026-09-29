@@ -64,6 +64,13 @@ export default function LoginPage() {
           />
         </Field>
 
+        <Link
+          href="/olvide-contrasena"
+          className="-mt-2 self-end text-xs text-text-soft underline"
+        >
+          ¿Olvidaste tu contraseña?
+        </Link>
+
         {error && <p className="text-sm text-rosa">{error}</p>}
 
         <button
