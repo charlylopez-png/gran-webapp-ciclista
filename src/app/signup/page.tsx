@@ -79,7 +79,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 rounded-full bg-amarillo px-5 py-2.5 font-display text-xs uppercase tracking-wide text-on-accent hover:bg-gold disabled:opacity-60"
+          className="mt-2 rounded-full bg-[var(--accent)] px-5 py-2.5 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-60"
         >
           {loading ? "Creando…" : "Crear cuenta"}
         </button>
