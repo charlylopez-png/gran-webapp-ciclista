@@ -28,9 +28,7 @@ export default function LoginPage() {
         return;
       }
       const next = params.get("next");
-      router.push(
-        data.status === "approved" ? next ?? "/mi-equipo" : "/pendiente"
-      );
+      router.push(data.status === "approved" ? next ?? "/" : "/pendiente");
       router.refresh();
     } finally {
       setLoading(false);
