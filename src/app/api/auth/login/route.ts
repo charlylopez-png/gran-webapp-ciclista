@@ -16,6 +16,12 @@ export async function POST(request: Request) {
   }
 
   const normalizedEmail = parsed.data.email.trim().toLowerCase();
+  // El teclado/autocompletar de algunos móviles añade un espacio al
+  // final de la contraseña al pulsar "Ir" o al aceptar una sugerencia,
+  // así que se recorta antes de comparar (igual que ya se hace con el
+  // email) — si no, el login falla en el móvil con la contraseña
+  // correcta aunque en el ordenador funcione bien.
+  const password = parsed.data.password.trim();
   const rows = await sql`
     select id, email, password_hash, display_name, role, status, is_sanedrin, is_manual
     from users where email = ${normalizedEmail}
@@ -25,7 +31,7 @@ export async function POST(request: Request) {
   if (
     !user ||
     user.is_manual ||
-    !(await verifyPassword(parsed.data.password, user.password_hash))
+    !(await verifyPassword(password, user.password_hash))
   ) {
     return NextResponse.json(
       { error: "Email o contraseña incorrectos." },
