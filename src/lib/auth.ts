@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { randomInt } from "crypto";
+import { createHash, randomInt } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
@@ -92,6 +92,49 @@ export async function setSessionCookie(payload: SessionPayload) {
 export async function clearSessionCookie() {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
+}
+
+// Recuperar contraseña: en vez de una tabla nueva de tokens, se firma un
+// JWT de vida corta (1h) que lleva una "huella" del hash de contraseña
+// actual. Al usarlo se compara esa huella con la huella del hash en ese
+// momento — si la contraseña ya cambió (porque el enlace ya se usó, o
+// porque el admin la restableció mientras tanto), la huella no coincide
+// y el enlace deja de servir aunque no haya caducado. Un solo uso, sin
+// guardar nada nuevo en la base de datos.
+export function passwordFingerprint(passwordHash: string) {
+  return createHash("sha256").update(passwordHash).digest("hex").slice(0, 16);
+}
+
+export type PasswordResetPayload = { userId: string; pwFingerprint: string };
+
+export async function createPasswordResetToken(
+  userId: string,
+  currentPasswordHash: string
+) {
+  return new SignJWT({
+    userId,
+    purpose: "password_reset",
+    pwFingerprint: passwordFingerprint(currentPasswordHash),
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("1h")
+    .sign(encodedSecret());
+}
+
+export async function verifyPasswordResetToken(
+  token: string
+): Promise<PasswordResetPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, encodedSecret());
+    if (payload.purpose !== "password_reset") return null;
+    return {
+      userId: payload.userId as string,
+      pwFingerprint: payload.pwFingerprint as string,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // "Actuar como": deja que el admin entre temporalmente en la sesión de
