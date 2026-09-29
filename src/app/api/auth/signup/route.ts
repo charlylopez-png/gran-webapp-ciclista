@@ -19,7 +19,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const { email, password, displayName } = parsed.data;
+  const { email, displayName } = parsed.data;
+  // Mismo motivo que en /api/auth/login: recortar espacios que algunos
+  // móviles añaden solos al escribir o autocompletar, para que la
+  // contraseña que se guarda sea la misma que luego se compare al
+  // entrar desde cualquier dispositivo.
+  const password = parsed.data.password.trim();
   const normalizedEmail = email.trim().toLowerCase();
 
   const existing = await sql`select id from users where email = ${normalizedEmail}`;
