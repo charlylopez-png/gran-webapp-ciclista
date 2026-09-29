@@ -1,86 +1,97 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getSession } from "@/lib/auth";
-import { sql } from "@/lib/db";
-import { getCompetition } from "@/lib/competitions-data";
-import { getActiveTeam } from "@/lib/teams";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
-// Resumen de una competición: cuántos corredores lleva fichados el
-// equipo activo y accesos a Mi equipo / Clasificación. Sustituye a la
-// portada a medida que tenía el Mundial (mundial-home-banner.tsx).
-export default async function CompetitionHomePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const competition = await getCompetition(slug);
-  if (!competition || competition.status === "hidden") notFound();
+export default function LoginPage() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const session = await getSession();
-  if (!session || session.status !== "approved") {
-    return (
-      <p className="text-sm text-text-soft">
-        {session
-          ? "Tu cuenta todavía no está aprobada."
-          : "Inicia sesión para apuntarte a esta competición."}
-      </p>
-    );
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo iniciar sesión.");
+        return;
+      }
+      const next = params.get("next");
+      router.push(
+        data.status === "approved" ? next ?? "/mi-equipo" : "/pendiente"
+      );
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
-
-  // Giro/Tour/Vuelta: dadas de alta para reservar su hueco en la portada,
-  // pero su motor de fichaje por presupuesto todavía no existe. Ni
-  // creamos equipo ni enlazamos a /equipo (que da 404 a propósito para
-  // este game_type) hasta que esa pantalla exista.
-  if (competition.game_type !== "squad_color" || !competition.squad_composition) {
-    return (
-      <div className="rounded-2xl border border-line bg-surface p-4">
-        <h2 className="font-display text-sm text-verde-deep">Muy pronto</h2>
-        <p className="mt-1 text-sm text-text-soft">
-          El fichaje por presupuesto de {competition.short_name ?? competition.name}{" "}
-          está en marcha. En cuanto esté listo el reglamento y los corredores,
-          podrás armar tu equipo aquí.
-        </p>
-      </div>
-    );
-  }
-
-  const { activeTeam } = await getActiveTeam(session.userId, competition.id);
-  const [{ count }] = (await sql`
-    select count(*)::int as count from team_squad where team_id = ${activeTeam.id}
-  `) as { count: number }[];
-
-  const squadSize = competition.squad_composition
-    ? competition.squad_composition.amarillo +
-      competition.squad_composition.rosa +
-      competition.squad_composition.verde
-    : null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="rounded-2xl border border-line bg-surface p-4">
-        <h2 className="font-display text-sm text-verde-deep">
-          {activeTeam.name}
-        </h2>
-        <p className="mt-1 text-sm text-text-soft">
-          {squadSize
-            ? `${count}/${squadSize} corredores fichados.`
-            : `${count} corredores fichados.`}
-        </p>
-        <Link
-          href={`/${slug}/equipo`}
-          className="mt-3 inline-block rounded-full bg-[var(--accent)] px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110"
+    <div className="mx-auto max-w-sm px-5 py-14">
+      <h1 className="text-2xl text-verde-deep">Entrar</h1>
+      <p className="mt-2 text-sm text-text-soft">
+        Accede con tu email y contraseña para elegir tu equipo.
+      </p>
+
+      <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
+        <Field label="Email">
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm"
+          />
+        </Field>
+        <Field label="Contraseña">
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm"
+          />
+        </Field>
+
+        {error && <p className="text-sm text-rosa">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-2 rounded-full bg-[var(--accent)] px-5 py-2.5 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-60"
         >
-          Editar mi equipo
+          {loading ? "Entrando…" : "Entrar"}
+        </button>
+      </form>
+
+      <p className="mt-5 text-sm text-text-soft">
+        ¿Aún no tienes cuenta?{" "}
+        <Link href="/signup" className="text-verde underline">
+          Crear cuenta
         </Link>
-      </div>
-      <Link
-        href={`/${slug}/clasificacion`}
-        className="rounded-2xl border border-line bg-surface p-4 hover:border-verde-deep/50"
-      >
-        <h2 className="font-display text-sm text-verde-deep">Clasificación</h2>
-        <p className="mt-1 text-sm text-text-soft">Ver cómo va la porra.</p>
-      </Link>
+      </p>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1 text-sm">
+      <span className="font-display text-[11px] uppercase tracking-wide text-text-soft">
+        {label}
+      </span>
+      {children}
+    </label>
   );
 }
