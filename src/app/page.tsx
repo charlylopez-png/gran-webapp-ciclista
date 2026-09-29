@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import CobbleBackground from "@/components/cobble-background";
 import { listVisibleCompetitions } from "@/lib/competitions-data";
 
 // Portada: tarjetas por competición activa, leídas de la tabla
@@ -12,26 +11,19 @@ export default async function Home() {
 
   return (
     <>
-      <section className="relative overflow-hidden px-5 py-14 text-[var(--hero-text)] sm:py-20">
-        <CobbleBackground cell={0.13} seed={7} />
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(120% 90% at 30% 20%, rgba(4,16,10,0.72), rgba(4,16,10,0.25) 55%, rgba(4,16,10,0.55))",
-          }}
-        />
+      <div className="peloton-stripe" />
+      <section className="relative overflow-hidden px-5 py-14 sm:py-20">
         <div className="relative mx-auto max-w-3xl">
-          <span className="inline-block rounded-full border border-white/40 px-3 py-1 font-display text-[11px] uppercase tracking-[0.16em]">
+          <span className="inline-block rounded-full border border-line px-3 py-1 font-display text-[11px] uppercase tracking-[0.16em] text-text-soft">
             Temporada 2027
           </span>
           <h1 className="mt-5 font-logo text-5xl leading-none sm:text-6xl">
-            TX<span className="text-amarillo">app</span>
+            txirrindulari<span className="logo-app">APP</span>
           </h1>
-          <p className="mt-3 font-display text-xl normal-case">
+          <p className="mt-3 font-display text-xl normal-case text-text-soft">
             Todas tus porras ciclistas, en un solo sitio
           </p>
-          <p className="mt-5 max-w-xl border-l-2 border-amarillo pl-4 text-sm leading-relaxed text-white/90">
+          <p className="mt-5 max-w-xl border-l-2 border-[var(--accent)] pl-4 text-sm leading-relaxed text-text-soft">
             Una cuenta, un maestro de corredores World Tour y ProTeam, y una
             competición por cada carrera — UKT, Mundial, Giro, Tour y
             Vuelta: elige la tuya, arma tu equipo y pelea la general con la
@@ -40,7 +32,7 @@ export default async function Home() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/signup"
-              className="rounded-full bg-amarillo px-5 py-2.5 font-display text-xs uppercase tracking-wide text-on-accent hover:bg-gold"
+              className="rounded-full bg-[var(--accent)] px-5 py-2.5 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110"
             >
               Apuntarme a la porra
             </Link>
