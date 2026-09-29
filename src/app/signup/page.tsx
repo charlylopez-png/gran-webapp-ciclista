@@ -27,7 +27,7 @@ export default function SignupPage() {
         setError(data.error ?? "No se pudo crear la cuenta.");
         return;
       }
-      router.push(data.status === "approved" ? "/mi-equipo" : "/pendiente");
+      router.push(data.status === "approved" ? "/" : "/pendiente");
       router.refresh();
     } finally {
       setLoading(false);
