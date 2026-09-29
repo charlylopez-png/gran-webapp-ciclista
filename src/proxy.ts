@@ -32,7 +32,7 @@ export async function proxy(request: NextRequest) {
   const isAuthPage = PUBLIC_AUTH_PATHS.some((p) => pathname.startsWith(p));
 
   if (isAuthPage && session && session.status === "approved") {
-    return NextResponse.redirect(new URL("/mi-equipo", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (!isProtected) {
@@ -46,7 +46,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname.startsWith(ADMIN_PREFIX) && session.role !== "admin") {
-    return NextResponse.redirect(new URL("/mi-equipo", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (
