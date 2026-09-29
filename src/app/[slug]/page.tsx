@@ -69,7 +69,7 @@ export default async function CompetitionHomePage({
         </p>
         <Link
           href={`/${slug}/equipo`}
-          className="mt-3 inline-block rounded-full bg-amarillo px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:bg-gold"
+          className="mt-3 inline-block rounded-full bg-[var(--accent)] px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110"
         >
           Editar mi equipo
         </Link>

@@ -29,25 +29,28 @@ export default async function CompetitionLayout({
   return (
     <div className={theme.scopeClassName}>
       {theme.stripeClassName && <div className={theme.stripeClassName} />}
-      <div className="mx-auto max-w-3xl px-5 py-8">
-        <div className="mb-1 flex items-center gap-2 font-display text-[11px] uppercase tracking-[0.16em] text-verde">
-          <span className="h-1.5 w-1.5 rounded-full bg-amarillo" />
-          {competition.season}
+      <div className="comp-hero px-5 pb-6 pt-8">
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-1 flex items-center gap-2 font-display text-[11px] uppercase tracking-[0.16em] text-verde">
+            <span className="h-1.5 w-1.5 rounded-full bg-amarillo" />
+            {competition.season}
+          </div>
+          <h1 className="comp-title text-2xl text-verde-deep">{competition.name}</h1>
+
+          {competition.picks_lock_at && (
+            <p
+              className={`mt-2 font-display text-xs uppercase tracking-wide ${
+                locked ? "text-rosa" : "text-verde"
+              }`}
+            >
+              {locked
+                ? "Los fichajes están cerrados."
+                : `Fichajes abiertos hasta ${formatEventDate(competition.picks_lock_at)}.`}
+            </p>
+          )}
         </div>
-        <h1 className="text-2xl text-verde-deep">{competition.name}</h1>
-
-        {competition.picks_lock_at && (
-          <p
-            className={`mt-2 font-display text-xs uppercase tracking-wide ${
-              locked ? "text-rosa" : "text-verde"
-            }`}
-          >
-            {locked
-              ? "Los fichajes están cerrados."
-              : `Fichajes abiertos hasta ${formatEventDate(competition.picks_lock_at)}.`}
-          </p>
-        )}
-
+      </div>
+      <div className="mx-auto max-w-3xl px-5 pb-8">
         <nav className="mt-5 flex flex-wrap gap-1.5">
           {session?.status === "approved" && (
             <>
