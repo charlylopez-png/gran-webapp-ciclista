@@ -17,13 +17,13 @@ export default async function Home() {
           <span className="inline-block rounded-full border border-line px-3 py-1 font-display text-[11px] uppercase tracking-[0.16em] text-text-soft">
             Temporada 2027
           </span>
-          <h1 className="mt-5 flex items-center gap-3 font-logo text-5xl leading-none sm:text-6xl">
+          <h1 className="mt-5 flex flex-wrap items-center gap-2 font-logo text-3xl leading-none sm:flex-nowrap sm:gap-3 sm:text-6xl">
             <Image
               src="/tx-identity/logo/tx-icon-square.svg"
               alt=""
               width={56}
               height={56}
-              className="h-11 w-11 shrink-0 sm:h-14 sm:w-14"
+              className="h-8 w-8 shrink-0 sm:h-14 sm:w-14"
             />
             <span>
               txirrindulari<span className="logo-app">APP</span>
@@ -31,12 +31,6 @@ export default async function Home() {
           </h1>
           <p className="mt-3 font-display text-xl normal-case text-text-soft">
             Todas tus porras ciclistas, en un solo sitio
-          </p>
-          <p className="mt-5 max-w-xl border-l-2 border-[var(--accent)] pl-4 text-sm leading-relaxed text-text-soft">
-            Una cuenta, un maestro de corredores World Tour y ProTeam, y una
-            competición por cada carrera — UKT, Mundial, Giro, Tour y
-            Vuelta: elige la tuya, arma tu equipo y pelea la general con la
-            cuadrilla.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
