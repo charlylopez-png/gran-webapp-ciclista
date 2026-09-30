@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { SessionPayload } from "@/lib/auth";
 import type { Competition } from "@/lib/competitions-data";
 import LogoutButton from "@/components/logout-button";
@@ -17,8 +20,19 @@ export default function SiteHeader({
   // El reglamento ya no es un enlace global: cada competición tiene el
   // suyo propio (distinto entre UKT, Mundial y grandes vueltas), así que
   // vive dentro de su subnav (ver [slug]/layout.tsx) y no aquí.
+  //
+  // Cuando ya estamos DENTRO de una competición, el selector de
+  // competiciones sobra: esa página ya tiene su propio subnav (Resumen /
+  // Mi equipo / Clasificación / Reglamento). Dejar aquí también el listado
+  // completo solo añade ruido — así que aquí arriba se reduce a la
+  // identidad (para volver al menú principal) + las acciones de sesión.
+  const pathname = usePathname();
+  const slugs = new Set(competitions.map((c) => c.slug));
+  const firstSegment = pathname?.split("/")[1] ?? "";
+  const insideCompetition = slugs.has(firstSegment);
+
   const navItems: NavItem[] = [];
-  if (session?.status === "approved") {
+  if (!insideCompetition && session?.status === "approved") {
     for (const c of competitions) {
       navItems.push({
         href: `/${c.slug}`,
@@ -27,29 +41,31 @@ export default function SiteHeader({
       });
     }
   }
-  if (session?.role === "admin") {
+  if (!insideCompetition && session?.role === "admin") {
     navItems.push({ href: "/admin", label: "Admin" });
   }
 
   return (
     <header className="sticky top-0 z-20 relative border-b border-line bg-[var(--bg)]/92 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-5 py-2.5">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
         <Link
           href="/"
           aria-label="txirrindulariAPP — Inicio"
-          className="flex shrink-0 items-center gap-1.5 font-logo text-lg leading-none text-text sm:text-xl"
+          className="flex shrink-0 items-center gap-2 font-logo text-lg leading-none text-text sm:text-xl"
         >
           <Image
             src="/tx-identity/logo/tx-icon-square.svg"
             alt=""
-            width={28}
-            height={28}
-            className="shrink-0"
+            width={32}
+            height={32}
+            className="h-7 w-7 shrink-0 sm:h-8 sm:w-8"
           />
-          txirrindulari<span className="logo-app">APP</span>
+          <span className="whitespace-nowrap">
+            txirrindulari<span className="logo-app">APP</span>
+          </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 sm:flex">
+        <nav className="hidden items-center gap-1.5 sm:flex">
           {navItems.map((item) => (
             <NavLink key={item.href} href={item.href} icon={item.icon}>
               {item.label}
@@ -95,9 +111,17 @@ function NavLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-display text-xs uppercase tracking-wide text-text hover:bg-surface-2"
+      className="flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-2 font-display text-xs uppercase tracking-wide text-text hover:bg-surface-2"
     >
-      {icon && <Image src={icon} alt="" width={16} height={16} className="rounded-full" />}
+      {icon && (
+        <Image
+          src={icon}
+          alt=""
+          width={24}
+          height={24}
+          className="h-6 w-6 shrink-0 rounded-full object-cover ring-1 ring-line"
+        />
+      )}
       {children}
     </Link>
   );
