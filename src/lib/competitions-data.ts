@@ -26,6 +26,16 @@ export type Competition = {
   budget_squad_size: number | null;
   budget_cap: string | number | null;
   real_team_pick_size: number | null;
+  // Ficha informativa de la carrera (opcional, cualquier competición):
+  // enlace oficial, imagen de recorrido, distancia/desnivel y notas de
+  // los ascensos clave. Se muestra en el reglamento cuando hay algo que
+  // enseñar (ver CompetitionReglamento) — hoy solo la rellena Il
+  // Lombardia, pero no es un campo suyo en exclusiva.
+  official_url: string | null;
+  route_image_path: string | null;
+  route_distance_km: string | number | null;
+  route_elevation_m: number | null;
+  route_notes: string | null;
 };
 
 export async function getCompetition(slug: string): Promise<Competition | null> {
