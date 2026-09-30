@@ -164,6 +164,7 @@ h3,
 .competition-tour,
 .competition-vuelta {
   background: var(--bg-app-gradient);
+  color: var(--text);
   min-height: 100%;
 }
 
