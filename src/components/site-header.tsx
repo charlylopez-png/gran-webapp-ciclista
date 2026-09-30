@@ -37,8 +37,15 @@ export default function SiteHeader({
         <Link
           href="/"
           aria-label="txirrindulariAPP — Inicio"
-          className="shrink-0 font-logo text-lg leading-none text-text sm:text-xl"
+          className="flex shrink-0 items-center gap-1.5 font-logo text-lg leading-none text-text sm:text-xl"
         >
+          <Image
+            src="/tx-identity/logo/tx-icon-square.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="shrink-0"
+          />
           txirrindulari<span className="logo-app">APP</span>
         </Link>
 
