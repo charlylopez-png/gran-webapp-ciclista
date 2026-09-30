@@ -124,7 +124,11 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
           Puntuación de partida antes de aplicar los coeficientes. Puntúan
           los 20 primeros.
         </p>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {/* grid-flow-col + filas explícitas: rellena por columnas (1º-10º en
+            la primera columna, 11º-20º en la segunda; a partir de sm, 4
+            columnas de 5), en vez del orden por filas por defecto de CSS
+            grid (que dejaba el 2º junto al 1º en vez de debajo). */}
+        <div className="mt-4 grid grid-flow-col grid-cols-2 grid-rows-[repeat(10,minmax(0,auto))] gap-2 sm:grid-cols-4 sm:grid-rows-[repeat(5,minmax(0,auto))]">
           {Object.entries(POINTS_BY_POSITION).map(([pos, pts], i) => (
             <div
               key={pos}
