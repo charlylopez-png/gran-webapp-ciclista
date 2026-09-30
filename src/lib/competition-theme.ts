@@ -32,6 +32,14 @@ const THEMES: Record<string, CompetitionTheme> = {
     scopeClassName: "competition-vuelta",
     stripeClassName: "competition-vuelta-stripe",
   },
+  europeo: {
+    scopeClassName: "competition-europeo",
+    stripeClassName: "competition-europeo-stripe",
+  },
+  lombardia: {
+    scopeClassName: "competition-lombardia",
+    stripeClassName: "competition-lombardia-stripe",
+  },
 };
 
 export function getCompetitionTheme(themeColor: string | null): CompetitionTheme {
