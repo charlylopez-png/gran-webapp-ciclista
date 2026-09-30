@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Competition } from "@/lib/competitions-data";
 import {
   CATEGORY_LABEL,
@@ -23,17 +24,88 @@ export default function CompetitionReglamento({
 }: {
   competition: Competition;
 }) {
-  if (competition.game_type === "budget_draft") {
-    return <BudgetDraftReglamento competition={competition} />;
-  }
-  if (competition.squad_composition) {
-    return <SquadColorReglamento competition={competition} />;
-  }
   return (
-    <div className="rounded-2xl border border-line bg-surface p-4">
-      <p className="text-sm text-text-soft">
-        El reglamento de {competition.name} está en preparación.
-      </p>
+    <div>
+      <RaceInfoCard competition={competition} />
+      {competition.game_type === "budget_draft" ? (
+        <BudgetDraftReglamento competition={competition} />
+      ) : competition.squad_composition ? (
+        <SquadColorReglamento competition={competition} />
+      ) : (
+        <div className="rounded-2xl border border-line bg-surface p-4">
+          <p className="text-sm text-text-soft">
+            El reglamento de {competition.name} está en preparación.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Ficha "sobre la carrera": enlace oficial, imagen de recorrido y datos
+// (distancia, desnivel, notas de los ascensos). Genérica para cualquier
+// competición — solo se pinta si hay algo que enseñar, así que Mundial y
+// Europeo no cambian hasta que alguien les rellene estos campos también.
+function RaceInfoCard({ competition }: { competition: Competition }) {
+  const {
+    official_url,
+    route_image_path,
+    route_distance_km,
+    route_elevation_m,
+    route_notes,
+  } = competition;
+  const hasInfo =
+    official_url || route_image_path || route_distance_km || route_elevation_m || route_notes;
+  if (!hasInfo) return null;
+
+  return (
+    <div className="mb-8 overflow-hidden rounded-2xl border border-line bg-surface">
+      {route_image_path && (
+        <Image
+          src={route_image_path}
+          alt={`Recorrido de ${competition.name}`}
+          width={1400}
+          height={460}
+          className="w-full"
+        />
+      )}
+      <div className="p-5">
+        <Kicker>Sobre la carrera</Kicker>
+        {(route_distance_km || route_elevation_m) && (
+          <div className="mt-2 flex flex-wrap gap-4">
+            {route_distance_km && (
+              <Stat label="Distancia" value={`${Number(route_distance_km).toLocaleString("es-ES")} km`} />
+            )}
+            {route_elevation_m && (
+              <Stat label="Desnivel" value={`${route_elevation_m.toLocaleString("es-ES")} m`} />
+            )}
+          </div>
+        )}
+        {route_notes && (
+          <p className="mt-3 max-w-prose text-sm leading-relaxed text-text-soft">{route_notes}</p>
+        )}
+        {official_url && (
+          <a
+            href={official_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-line px-3.5 py-2 font-display text-xs uppercase tracking-wide text-verde-deep hover:border-verde-deep/50"
+          >
+            Web oficial ↗
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="font-display text-[11px] uppercase tracking-wide text-text-soft">
+        {label}
+      </div>
+      <div className="font-display text-xl text-verde-deep">{value}</div>
     </div>
   );
 }
