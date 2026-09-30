@@ -80,6 +80,16 @@ body {
   font-family: var(--font-body), sans-serif;
 }
 
+/* En móvil se sube el tamaño base de letra: casi todas las clases de
+   Tailwind (text-xs, text-sm, paddings, gaps…) están en rem, así que
+   escalan juntas con esto sin tocar cada componente. Solo afecta a
+   pantallas pequeñas — en escritorio se queda en 16px como siempre. */
+@media (max-width: 640px) {
+  html {
+    font-size: 18px;
+  }
+}
+
 h1,
 h2,
 h3,
