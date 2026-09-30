@@ -17,8 +17,17 @@ export default async function Home() {
           <span className="inline-block rounded-full border border-line px-3 py-1 font-display text-[11px] uppercase tracking-[0.16em] text-text-soft">
             Temporada 2027
           </span>
-          <h1 className="mt-5 font-logo text-5xl leading-none sm:text-6xl">
-            txirrindulari<span className="logo-app">APP</span>
+          <h1 className="mt-5 flex items-center gap-3 font-logo text-5xl leading-none sm:text-6xl">
+            <Image
+              src="/tx-identity/logo/tx-icon-square.svg"
+              alt=""
+              width={56}
+              height={56}
+              className="h-11 w-11 shrink-0 sm:h-14 sm:w-14"
+            />
+            <span>
+              txirrindulari<span className="logo-app">APP</span>
+            </span>
           </h1>
           <p className="mt-3 font-display text-xl normal-case text-text-soft">
             Todas tus porras ciclistas, en un solo sitio
