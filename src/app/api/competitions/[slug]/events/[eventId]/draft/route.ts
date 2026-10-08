@@ -110,6 +110,18 @@ export async function POST(
       insert into team_event_draft (team_id, event_id, competition_rider_id)
       select ${activeTeam.id}::uuid, ${eventId}::uuid, unnest(${riderIds}::uuid[])
     `;
+    // Si el Kopman de esta carrera era de la selección anterior y ya no
+    // está, se quita: tiene que ser uno de los corredores de la carrera.
+    await tx`
+      delete from team_event_kopman
+      where team_id = ${activeTeam.id} and event_id = ${eventId}
+        and competition_rider_id not in (
+          select competition_rider_id from team_squad where team_id = ${activeTeam.id}
+          union
+          select competition_rider_id from team_event_draft
+          where team_id = ${activeTeam.id} and event_id = ${eventId}
+        )
+    `;
   });
 
   return NextResponse.json({ ok: true });

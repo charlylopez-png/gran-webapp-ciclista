@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import {
   CATEGORIES,
@@ -60,6 +61,7 @@ export default function SquadSelector({
   onSaved?: () => void;
   locked?: boolean;
 }) {
+  const router = useRouter();
   const squadSize = squadSizeOf(squadComposition);
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(initialSelectedIds)
@@ -156,6 +158,9 @@ export default function SquadSelector({
         return;
       }
       setFeedback({ type: "ok", text: "Guardado." });
+      // Refresca lo que depende de la plantilla en la misma pantalla (p.ej.
+      // la lista de candidatos a Kopman de la carrera).
+      router.refresh();
       onSaved?.();
     });
   }

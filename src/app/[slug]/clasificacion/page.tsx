@@ -126,7 +126,10 @@ export default async function ClasificacionPage({
           eventTotal += pointsByEventRider.get(`${event.id}:${id}`) ?? 0;
         }
 
-        const kopmanRiderId = kopmanByTeamEvent.get(`${s.team_id}:${event.id}`) ?? null;
+        // Solo cuenta si sigue siendo uno de los corredores de esa carrera
+        // (si luego lo quitó de su plantilla, es como no haber elegido).
+        const chosenKopman = kopmanByTeamEvent.get(`${s.team_id}:${event.id}`) ?? null;
+        const kopmanRiderId = chosenKopman && effectiveIds.has(chosenKopman) ? chosenKopman : null;
         const kopmanPoints = kopmanRiderId
           ? pointsByEventRider.get(`${event.id}:${kopmanRiderId}`) ?? 0
           : null;
