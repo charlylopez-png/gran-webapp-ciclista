@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { transaction } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { getCompetition } from "@/lib/competitions-data";
+import { getCompetition, saveRaceEditionName } from "@/lib/competitions-data";
 
 // Edición pasada de una competición SIN carreras propias (la general de una
 // gran vuelta): hermana de events/[eventId]/history, pero contra
@@ -10,6 +10,8 @@ import { getCompetition } from "@/lib/competitions-data";
 // puesto es el orden en que llegan las filas.
 const BodySchema = z.object({
   editionYear: z.number().int().min(1900).max(2100),
+  // "Tour de France 2026"; null = sin nombre propio (el de la competición).
+  editionName: z.string().trim().min(1).max(120).nullable().optional(),
   rows: z
     .array(
       z.object({
@@ -44,7 +46,7 @@ export async function PUT(
     );
   }
 
-  const { editionYear, rows } = parsed.data;
+  const { editionYear, editionName, rows } = parsed.data;
   await transaction(async (tx) => {
     await tx`
       delete from competition_result_history
@@ -56,6 +58,13 @@ export async function PUT(
         values (${competition.id}, ${editionYear}, ${i + 1}, ${row.riderName}, ${row.team || null})
       `;
     }
+    // undefined = no tocar el nombre; null = quitarlo.
+    if (editionName !== undefined) await saveRaceEditionName(tx, {
+      competitionId: competition.id,
+      eventId: null,
+      editionYear,
+      name: editionName,
+    });
   });
 
   return NextResponse.json({ ok: true });

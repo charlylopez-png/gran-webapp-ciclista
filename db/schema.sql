@@ -306,3 +306,19 @@ create table if not exists competition_result_history (
   unique (competition_id, edition_year, position)
 );
 alter table competition_result_history enable row level security;
+
+-- Nombre (y logo) propio de una edición pasada — "Mundial de Montreal
+-- 2026" — en vez del de la carrera actual. event_id null = la competición
+-- entera (general de una gran vuelta, Europeo sin carrera propia).
+create table if not exists race_editions (
+  id uuid primary key default gen_random_uuid(),
+  competition_id uuid not null references competitions (id) on delete cascade,
+  event_id uuid references competition_events (id) on delete cascade,
+  edition_year int not null,
+  name text not null,
+  logo_path text,
+  created_at timestamptz not null default now()
+);
+create unique index if not exists idx_race_editions_unique
+  on race_editions (competition_id, coalesce(event_id, '00000000-0000-0000-0000-000000000000'::uuid), edition_year);
+alter table race_editions enable row level security;

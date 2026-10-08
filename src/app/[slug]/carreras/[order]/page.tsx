@@ -10,6 +10,7 @@ import {
   getEventResultHistory,
   getEventHistoryYears,
   getEventKopman,
+  getRaceEditions,
 } from "@/lib/competitions-data";
 import { getActiveTeam } from "@/lib/teams";
 import {
@@ -48,6 +49,9 @@ export default async function EventDetailPage({
   const historyYears = await getEventHistoryYears(event.id);
   const latestYear = historyYears[0] ?? null;
   const history = latestYear ? await getEventResultHistory(event.id, latestYear) : [];
+  const editionName = latestYear
+    ? (await getRaceEditions(competition.id, latestYear)).find((e) => e.event_id === event.id)?.name
+    : undefined;
 
   const session = await getSession();
   const canDraft = Boolean(session && (session.role === "admin" || session.status === "approved"));
@@ -183,7 +187,7 @@ export default async function EventDetailPage({
 
       <section className="mt-8">
         <h2 className="font-display text-sm text-verde-deep">
-          {latestYear ? `Edición ${latestYear}` : "Edición pasada"}
+          {editionName ?? (latestYear ? `Edición ${latestYear}` : "Edición pasada")}
         </h2>
         {history.length > 0 ? (
           <>

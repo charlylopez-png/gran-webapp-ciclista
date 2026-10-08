@@ -1,5 +1,5 @@
 import "server-only";
-import { sql } from "./db";
+import { sql, type TxSql } from "./db";
 import type { GameType, RiderCategory, SquadComposition } from "./competitions";
 
 // Acceso a base de datos de competiciones, separado de ./competitions.ts
@@ -182,6 +182,59 @@ export async function getCompetitionResultHistory(
     where competition_id = ${competitionId} and edition_year = ${editionYear}
     order by position
   `) as EventResultHistoryRow[];
+}
+
+// Nombre (y logo) propio de cada edición pasada — "Mundial de Montreal
+// 2026" — para no enseñar el de la carrera actual. event_id null = la
+// competición entera (general de una gran vuelta).
+export type RaceEdition = {
+  event_id: string | null;
+  name: string;
+  logo_path: string | null;
+};
+
+export async function getRaceEditions(
+  competitionId: string,
+  editionYear: number
+): Promise<RaceEdition[]> {
+  return (await sql`
+    select event_id, name, logo_path from race_editions
+    where competition_id = ${competitionId} and edition_year = ${editionYear}
+  `) as RaceEdition[];
+}
+
+// Guarda (o quita, con name null) el nombre de una edición pasada desde el
+// formulario de admin, dentro de la misma transacción que su top 20. Si
+// ya existía, conserva su logo.
+export async function saveRaceEditionName(
+  tx: TxSql,
+  {
+    competitionId,
+    eventId,
+    editionYear,
+    name,
+  }: { competitionId: string; eventId: string | null; editionYear: number; name: string | null }
+) {
+  if (name === null) {
+    await tx`
+      delete from race_editions
+      where competition_id = ${competitionId} and event_id is not distinct from ${eventId}
+        and edition_year = ${editionYear}
+    `;
+    return;
+  }
+  const updated = await tx`
+    update race_editions set name = ${name}
+    where competition_id = ${competitionId} and event_id is not distinct from ${eventId}
+      and edition_year = ${editionYear}
+    returning id
+  `;
+  if (updated.length === 0) {
+    await tx`
+      insert into race_editions (competition_id, event_id, edition_year, name)
+      values (${competitionId}, ${eventId}, ${editionYear}, ${name})
+    `;
+  }
 }
 
 // Años de edición disponibles para un evento (para elegir cuál mostrar

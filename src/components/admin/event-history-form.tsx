@@ -12,13 +12,16 @@ export default function EventHistoryForm({
   saveUrl,
   initialYear,
   initialRows,
+  initialName = "",
 }: {
   saveUrl: string;
   initialYear: number;
   initialRows: { rider_name: string; team: string | null }[];
+  initialName?: string;
 }) {
   const router = useRouter();
   const [year, setYear] = useState(String(initialYear));
+  const [editionName, setEditionName] = useState(initialName);
   const [text, setText] = useState(() =>
     initialRows.map((r) => (r.team ? `${r.rider_name}; ${r.team}` : r.rider_name)).join("\n")
   );
@@ -46,7 +49,11 @@ export default function EventHistoryForm({
       const res = await fetch(saveUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ editionYear: Number(year), rows }),
+        body: JSON.stringify({
+          editionYear: Number(year),
+          editionName: editionName.trim() || null,
+          rows,
+        }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -60,17 +67,30 @@ export default function EventHistoryForm({
 
   return (
     <div>
-      <label className="flex w-32 flex-col gap-1 text-xs text-text-soft">
-        Año
-        <input
-          type="number"
-          min={1900}
-          max={2100}
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          className="rounded-full border border-line bg-[var(--bg)] px-3.5 py-2 text-sm text-text outline-none focus:border-verde"
-        />
-      </label>
+      <div className="flex flex-wrap gap-2">
+        <label className="flex w-28 flex-col gap-1 text-xs text-text-soft">
+          Año
+          <input
+            type="number"
+            min={1900}
+            max={2100}
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className="rounded-full border border-line bg-[var(--bg)] px-3.5 py-2 text-sm text-text outline-none focus:border-verde"
+          />
+        </label>
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-text-soft">
+          Nombre de esa edición (opcional)
+          <input
+            type="text"
+            value={editionName}
+            onChange={(e) => setEditionName(e.target.value)}
+            maxLength={120}
+            placeholder="p.ej. Mundial de Montreal 2026"
+            className="rounded-full border border-line bg-[var(--bg)] px-3.5 py-2 text-sm text-text outline-none focus:border-verde"
+          />
+        </label>
+      </div>
       <label className="mt-3 flex flex-col gap-1 text-xs text-text-soft">
         Top 20, un corredor por línea (Nombre; Equipo)
         <textarea

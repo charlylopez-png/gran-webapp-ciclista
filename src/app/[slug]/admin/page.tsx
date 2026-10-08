@@ -4,6 +4,7 @@ import {
   getCompetition,
   getCompetitionEvents,
   getCompetitionResultHistory,
+  getRaceEditions,
 } from "@/lib/competitions-data";
 import EventHistoryForm from "@/components/admin/event-history-form";
 import { squadLabels } from "@/lib/competitions";
@@ -69,6 +70,11 @@ export default async function CompetitionAdminPage({
               saveUrl={`/api/competitions/${slug}/history`}
               initialYear={competition.season - 1}
               initialRows={await getCompetitionResultHistory(competition.id, competition.season - 1)}
+              initialName={
+                (await getRaceEditions(competition.id, competition.season - 1)).find(
+                  (e) => e.event_id === null
+                )?.name
+              }
             />
           </div>
         </section>

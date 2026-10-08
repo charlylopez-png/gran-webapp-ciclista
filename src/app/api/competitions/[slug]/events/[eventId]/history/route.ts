@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sql, transaction } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { getCompetition } from "@/lib/competitions-data";
+import { getCompetition, saveRaceEditionName } from "@/lib/competitions-data";
 
 // Edición pasada de UNA carrera (top 20 de un año anterior, solo
 // informativo: no puntúa). Sustituye entera la lista de ese año — el
 // puesto es el orden en que llegan las filas (la primera es el 1º).
 const BodySchema = z.object({
   editionYear: z.number().int().min(1900).max(2100),
+  // "Mundial de Montreal 2026"; null = sin nombre propio (el de la carrera).
+  editionName: z.string().trim().min(1).max(120).nullable().optional(),
   rows: z
     .array(
       z.object({
@@ -51,7 +53,7 @@ export async function PUT(
     );
   }
 
-  const { editionYear, rows } = parsed.data;
+  const { editionYear, editionName, rows } = parsed.data;
   await transaction(async (tx) => {
     await tx`
       delete from event_result_history
@@ -63,6 +65,13 @@ export async function PUT(
         values (${eventId}, ${editionYear}, ${i + 1}, ${row.riderName}, ${row.team || null})
       `;
     }
+    // undefined = no tocar el nombre; null = quitarlo.
+    if (editionName !== undefined) await saveRaceEditionName(tx, {
+      competitionId: competition.id,
+      eventId,
+      editionYear,
+      name: editionName,
+    });
   });
 
   return NextResponse.json({ ok: true });

@@ -6,6 +6,7 @@ import {
   getCompetitionEvents,
   getCompetitionEventsHistory,
   getCompetitionResultHistory,
+  getRaceEditions,
   type EventResultHistoryRow,
 } from "@/lib/competitions-data";
 
@@ -25,11 +26,16 @@ export default async function PreviousEditionPage({
   if (!competition || competition.status === "hidden") notFound();
 
   const year = competition.season - 1;
-  const [events, eventsHistory, competitionHistory] = await Promise.all([
+  const [events, eventsHistory, competitionHistory, editions] = await Promise.all([
     getCompetitionEvents(competition.id),
     getCompetitionEventsHistory(competition.id, year, TOP),
     getCompetitionResultHistory(competition.id, year),
+    getRaceEditions(competition.id, year),
   ]);
+  // Nombre/logo de ESA edición (p.ej. "Mundial de Montreal 2026"); si no
+  // hay, el de la carrera actual (las clásicas no cambian de nombre).
+  const editionByEvent = new Map(editions.filter((e) => e.event_id).map((e) => [e.event_id!, e]));
+  const competitionEdition = editions.find((e) => e.event_id === null) ?? null;
 
   const historyByEvent = new Map<string, EventResultHistoryRow[]>();
   for (const row of eventsHistory) {
@@ -61,7 +67,9 @@ export default async function PreviousEditionPage({
       {competitionHistory.length > 0 && (
         <div className="mt-6">
           <ResultList
-            title={competition.game_type === "budget_draft" ? "Clasificación general" : competition.name}
+            title={competitionEdition?.name ?? competition.name}
+            kicker={competition.game_type === "budget_draft" ? "Clasificación general" : undefined}
+            logoPath={competitionEdition?.logo_path ?? competition.logo_path}
             rows={competitionHistory.slice(0, TOP)}
           />
         </div>
@@ -71,12 +79,13 @@ export default async function PreviousEditionPage({
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {events.map((event) => {
             const rows = historyByEvent.get(event.id) ?? [];
+            const edition = editionByEvent.get(event.id);
             return (
               <ResultList
                 key={event.id}
-                title={event.name}
+                title={edition?.name ?? event.name}
                 kicker={events.length > 1 ? `Carrera ${String(event.order_num).padStart(2, "0")}` : undefined}
-                logoPath={event.logo_path}
+                logoPath={edition?.logo_path ?? event.logo_path}
                 href={`/${slug}/carreras/${event.order_num}`}
                 rows={rows}
               />

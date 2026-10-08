@@ -8,6 +8,7 @@ import {
   getEventHistoryYears,
   getEventResultHistory,
   getEventResults,
+  getRaceEditions,
 } from "@/lib/competitions-data";
 import EventResultsForm from "@/components/admin/event-results-form";
 import EventHistoryForm from "@/components/admin/event-history-form";
@@ -41,6 +42,9 @@ export default async function EventAdminPage({
   ]);
   const latestYear = historyYears[0] ?? competition.season - 1;
   const history = historyYears.length > 0 ? await getEventResultHistory(event.id, latestYear) : [];
+  const editionName = (await getRaceEditions(competition.id, latestYear)).find(
+    (e) => e.event_id === event.id
+  )?.name;
 
   return (
     <div>
@@ -83,6 +87,7 @@ export default async function EventAdminPage({
             saveUrl={`/api/competitions/${slug}/events/${event.id}/history`}
             initialYear={latestYear}
             initialRows={history}
+            initialName={editionName}
           />
         </div>
       </section>
