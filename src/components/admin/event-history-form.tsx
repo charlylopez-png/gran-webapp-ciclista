@@ -4,17 +4,16 @@ import Spinner from "@/components/spinner";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-// Edición pasada de UNA carrera (solo informativa, no puntúa): un corredor
-// por línea en orden de llegada, con el equipo opcional detrás de un ";".
-// Pegar la lista de ProCyclingStats tal cual, quitando lo que sobre.
+// Edición pasada de UNA carrera, o de la competición entera si no tiene
+// carreras propias (general de una gran vuelta) — solo informativa, no
+// puntúa: un corredor por línea en orden de llegada, con el equipo opcional
+// detrás de un ";". `saveUrl` decide dónde se guarda.
 export default function EventHistoryForm({
-  slug,
-  eventId,
+  saveUrl,
   initialYear,
   initialRows,
 }: {
-  slug: string;
-  eventId: string;
+  saveUrl: string;
   initialYear: number;
   initialRows: { rider_name: string; team: string | null }[];
 }) {
@@ -44,7 +43,7 @@ export default function EventHistoryForm({
       return;
     }
     startTransition(async () => {
-      const res = await fetch(`/api/competitions/${slug}/events/${eventId}/history`, {
+      const res = await fetch(saveUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ editionYear: Number(year), rows }),

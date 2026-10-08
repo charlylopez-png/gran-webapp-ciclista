@@ -290,3 +290,19 @@ alter table team_event_draft enable row level security;
 alter table event_results enable row level security;
 alter table stage_result_lists enable row level security;
 alter table sprint_pairings enable row level security;
+
+-- ── Edición anterior (solo informativa, no puntúa) ─────────────────────
+-- Por carrera: event_result_history (event_id, edition_year, position,
+-- rider_name, team). Para competiciones SIN carreras propias (la general
+-- de una gran vuelta), esta otra tabla, por competición.
+create table if not exists competition_result_history (
+  id uuid primary key default gen_random_uuid(),
+  competition_id uuid not null references competitions (id) on delete cascade,
+  edition_year int not null,
+  position int not null check (position between 1 and 20),
+  rider_name text not null,
+  team text,
+  created_at timestamptz not null default now(),
+  unique (competition_id, edition_year, position)
+);
+alter table competition_result_history enable row level security;

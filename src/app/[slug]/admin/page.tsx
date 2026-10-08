@@ -1,6 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getCompetition, getCompetitionEvents } from "@/lib/competitions-data";
+import {
+  getCompetition,
+  getCompetitionEvents,
+  getCompetitionResultHistory,
+} from "@/lib/competitions-data";
+import EventHistoryForm from "@/components/admin/event-history-form";
 import { squadLabels } from "@/lib/competitions";
 import CompetitionLockForm from "@/components/admin/competition-lock-form";
 import EventAdminRow from "@/components/admin/event-admin-row";
@@ -48,6 +53,26 @@ export default async function CompetitionAdminPage({
           <CompetitionLockForm slug={slug} picksLockAt={competition.picks_lock_at} />
         </div>
       </section>
+
+      {events.length === 0 && (
+        <section className="mt-6 rounded-2xl border border-line bg-surface p-4">
+          <h2 className="font-display text-sm text-verde-deep">
+            Edición {competition.season - 1}
+            {competition.game_type === "budget_draft" ? " · clasificación general" : ""}
+          </h2>
+          <p className="mt-1 text-sm text-text-soft">
+            Se enseña en la pestaña &quot;Edición {competition.season - 1}&quot; (los 10 primeros).
+            Solo informativa, no puntúa.
+          </p>
+          <div className="mt-3">
+            <EventHistoryForm
+              saveUrl={`/api/competitions/${slug}/history`}
+              initialYear={competition.season - 1}
+              initialRows={await getCompetitionResultHistory(competition.id, competition.season - 1)}
+            />
+          </div>
+        </section>
+      )}
 
       {events.length > 0 && (
         <section className="mt-8">

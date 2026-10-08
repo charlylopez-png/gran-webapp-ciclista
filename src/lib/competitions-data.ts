@@ -150,6 +150,40 @@ export async function getEventResultHistory(
   `) as EventResultHistoryRow[];
 }
 
+// Pestaña "Edición <año anterior>": los N primeros de CADA carrera de la
+// competición en ese año, de una vez (en vez de una consulta por carrera).
+export type EditionHistoryRow = EventResultHistoryRow & { event_id: string };
+
+export async function getCompetitionEventsHistory(
+  competitionId: string,
+  editionYear: number,
+  limit: number
+): Promise<EditionHistoryRow[]> {
+  return (await sql`
+    select h.event_id, h.position, h.rider_name, h.team
+    from event_result_history h
+    join competition_events e on e.id = h.event_id
+    where e.competition_id = ${competitionId}
+      and h.edition_year = ${editionYear}
+      and h.position <= ${limit}
+    order by e.order_num, h.position
+  `) as EditionHistoryRow[];
+}
+
+// Edición anterior de una competición SIN carreras propias (grandes
+// vueltas: clasificación general) — tabla competition_result_history.
+export async function getCompetitionResultHistory(
+  competitionId: string,
+  editionYear: number
+): Promise<EventResultHistoryRow[]> {
+  return (await sql`
+    select position, rider_name, team
+    from competition_result_history
+    where competition_id = ${competitionId} and edition_year = ${editionYear}
+    order by position
+  `) as EventResultHistoryRow[];
+}
+
 // Años de edición disponibles para un evento (para elegir cuál mostrar
 // si algún día hay más de una cargada).
 export async function getEventHistoryYears(eventId: string): Promise<number[]> {

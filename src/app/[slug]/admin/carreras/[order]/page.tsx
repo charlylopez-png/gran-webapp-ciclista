@@ -80,8 +80,7 @@ export default async function EventAdminPage({
         </p>
         <div className="mt-3">
           <EventHistoryForm
-            slug={slug}
-            eventId={event.id}
+            saveUrl={`/api/competitions/${slug}/events/${event.id}/history`}
             initialYear={latestYear}
             initialRows={history}
           />

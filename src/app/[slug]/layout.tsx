@@ -73,6 +73,7 @@ export default async function CompetitionLayout({
         <nav className="mt-5 flex flex-wrap gap-1.5">
           {session?.status === "approved" && <SubNavLink href={`/${slug}`}>Inicio</SubNavLink>}
           <SubNavLink href={`/${slug}/reglamento`}>Reglamento</SubNavLink>
+          <SubNavLink href={`/${slug}/edicion-anterior`}>Edición {competition.season - 1}</SubNavLink>
           {session?.status === "approved" && (
             <>
               {hasEvents && (
