@@ -60,11 +60,43 @@ export function isValidSquad(
 // Nombres de la plantilla fija (temporada) y de la plantilla por carrera,
 // por competición — en UKT se llaman "Klassiekerkern" y
 // "Wedstrijdselectie"; en el resto, "Equipo Base" y "Last Draft".
-export function squadLabels(slug: string): { base: string; draft: string } {
+// `base`/`draft` llevan la traducción entre paréntesis (lo que se enseña
+// en textos y títulos); `baseShort`/`draftShort` son solo el nombre, para
+// huecos estrechos como las pestañas del subnav o las etiquetas de cierre.
+export type SquadLabels = {
+  base: string;
+  draft: string;
+  baseShort: string;
+  draftShort: string;
+};
+
+export function squadLabels(slug: string): SquadLabels {
   if (slug === "clasicas") {
-    return { base: "Klassiekerkern", draft: "Wedstrijdselectie" };
+    return {
+      base: "Klassiekerkern (Núcleo de las clásicas)",
+      draft: "Wedstrijdselectie (selección de carrera)",
+      baseShort: "Klassiekerkern",
+      draftShort: "Wedstrijdselectie",
+    };
   }
-  return { base: "Equipo Base", draft: "Last Draft" };
+  return {
+    base: "Equipo Base",
+    draft: "Last Draft",
+    baseShort: "Equipo Base",
+    draftShort: "Last Draft",
+  };
+}
+
+// "1 amarillo, 1 rojo, 1 rosa y 2 verdes" — la composición de una
+// plantilla en texto, con el plural bien puesto según cada cantidad.
+export function describeComposition(composition: SquadComposition): string {
+  const parts = CATEGORIES.filter((c) => (composition[c] ?? 0) > 0).map((c) => {
+    const n = composition[c];
+    const word = CATEGORY_LABEL[c].toLowerCase();
+    return `${n} ${n === 1 ? word : `${word}s`}`;
+  });
+  if (parts.length <= 1) return parts.join("");
+  return `${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}`;
 }
 
 export function isPicksLocked(picksLockAt: string | Date | null) {

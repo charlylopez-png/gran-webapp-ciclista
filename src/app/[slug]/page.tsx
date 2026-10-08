@@ -128,8 +128,8 @@ export default async function CompetitionHomePage({
                 }`}
               >
                 {isPicksLocked(nextEvent.picks_lock_at)
-                  ? `${hasEventDraft ? labels.draft : "Fichaje"} cerrado`
-                  : `${hasEventDraft ? labels.draft : "Fichaje"} hasta ${formatEventDate(nextEvent.picks_lock_at, "short")}`}
+                  ? `${hasEventDraft ? labels.draftShort : "Fichaje"} cerrado`
+                  : `${hasEventDraft ? labels.draftShort : "Fichaje"} hasta ${formatEventDate(nextEvent.picks_lock_at, "short")}`}
               </div>
             )}
           </div>

@@ -13,10 +13,12 @@ import {
 } from "@/lib/competitions-data";
 import { getActiveTeam } from "@/lib/teams";
 import {
+  describeComposition,
   formatCoefficient,
   formatEventDate,
   isPicksLocked,
   squadLabels,
+  squadSizeOf,
   type RiderCategory,
 } from "@/lib/competitions";
 import SquadSelector, { type SelectableRider } from "@/components/squad-selector";
@@ -80,6 +82,10 @@ export default async function EventDetailPage({
     const squadRows = (await sql`
       select competition_rider_id from team_squad where team_id = ${activeTeam.id}
     `) as { competition_rider_id: string }[];
+    // Los del Klassiekerkern/Equipo Base ya corren esta carrera: no se
+    // ofrecen en el selector de la selección de carrera.
+    const baseIds = new Set(squadRows.map((r) => r.competition_rider_id));
+    riders = riders.filter((r) => !baseIds.has(r.id));
 
     if (hasEventDraft) {
       const picks = (await sql`
@@ -248,11 +254,10 @@ export default async function EventDetailPage({
         <section className="mt-10 pb-6">
           <h2 className="font-display text-sm text-verde-deep">Tu {labels.draft} para esta carrera</h2>
           <p className="mt-1 text-sm text-text-soft">
-            {competition.event_squad_composition!.amarillo} amarillo,{" "}
-            {competition.event_squad_composition!.rojo} rojo,{" "}
-            {competition.event_squad_composition!.rosa} rosas y{" "}
-            {competition.event_squad_composition!.verde} verdes, solo para esta carrera —
-            se suman a tu {labels.base} para puntuar aquí.
+            {squadSizeOf(competition.event_squad_composition!)} corredores (
+            {describeComposition(competition.event_squad_composition!)}) solo para
+            esta carrera, distintos de los de tu {labels.base}: se suman a ellos
+            para puntuar aquí.
           </p>
 
           {canDraft ? (

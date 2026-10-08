@@ -140,7 +140,7 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
       title: "Tu equipo",
       accent: "amarillo",
       body: hasLastDraft
-        ? `Plantilla de ${totalSize} corredores en dos bloques: el ${labels.base} (${baseSize}), fijo toda la temporada, y la ${labels.draft} (${eventSize}), que recompones carrera a carrera.`
+        ? `Plantilla de ${totalSize} corredores por carrera en dos bloques: el ${labels.base}, ${baseSize} corredores fijos toda la temporada, y la ${labels.draft}, ${eventSize} corredores distintos que eliges antes de cada carrera.`
         : `Un ${labels.base} de ${baseSize} corredores, fijo para toda la competición.`,
     },
     {
@@ -245,8 +245,8 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
             title={labels.base}
             when={
               hasLastDraft
-                ? "Fijo para toda la temporada"
-                : "Fijo para toda la competición"
+                ? `${baseSize} corredores fijos para toda la temporada`
+                : `${baseSize} corredores fijos para toda la competición`
             }
             composition={composition}
           />
@@ -255,7 +255,7 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
               <div className="my-3 border-t border-dashed border-line" />
               <SquadBlock
                 title={labels.draft}
-                when="Se recompone antes de cada carrera"
+                when={`Antes de cada carrera eliges ${eventSize} corredores que no estén en tu ${labels.baseShort}`}
                 composition={eventComposition}
               />
               <div className="mt-3 border-t border-dashed border-line pt-3 text-center font-display text-xs tracking-wide text-verde-deep">

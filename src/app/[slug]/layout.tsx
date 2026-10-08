@@ -77,7 +77,7 @@ export default async function CompetitionLayout({
             <>
               {hasEvents && (
                 <>
-                  <SubNavLink href={`/${slug}/equipo`}>Mi {labels.base}</SubNavLink>
+                  <SubNavLink href={`/${slug}/equipo`}>Mi {labels.baseShort}</SubNavLink>
                   <SubNavLink href={`/${slug}/calendario`}>Calendario</SubNavLink>
                   <SubNavLink href={`/${slug}/equipos`}>Equipos</SubNavLink>
                 </>

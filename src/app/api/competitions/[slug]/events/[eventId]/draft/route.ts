@@ -89,6 +89,21 @@ export async function POST(
 
   const { activeTeam } = await getActiveTeam(session.userId, competition.id);
 
+  // Son dos bloques distintos: un corredor del Klassiekerkern/Equipo Base
+  // ya corre todas las carreras, así que no puede ocupar además un hueco
+  // de la selección de carrera.
+  const [{ overlap }] = (await sql`
+    select count(*)::int as overlap from team_squad
+    where team_id = ${activeTeam.id} and competition_rider_id = any(${riderIds}::uuid[])
+  `) as { overlap: number }[];
+  if (overlap > 0) {
+    const labels = squadLabels(slug);
+    return NextResponse.json(
+      { error: `No puedes elegir en tu ${labels.draftShort} corredores que ya están en tu ${labels.baseShort}.` },
+      { status: 400 }
+    );
+  }
+
   await transaction(async (tx) => {
     await tx`delete from team_event_draft where team_id = ${activeTeam.id} and event_id = ${eventId}`;
     await tx`
