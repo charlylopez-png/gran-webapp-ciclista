@@ -1,9 +1,11 @@
 import Image from "next/image";
 import type { Competition } from "@/lib/competitions-data";
 import {
+  CATEGORIES,
   CATEGORY_LABEL,
   DEFAULT_CATEGORY_MULTIPLIER,
   POINTS_BY_POSITION,
+  squadLabels,
   squadSizeOf,
   type RiderCategory,
 } from "@/lib/competitions";
@@ -112,15 +114,18 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function SquadColorReglamento({ competition }: { competition: Competition }) {
   const composition = competition.squad_composition!;
+  const eventComposition = competition.event_squad_composition;
   const hasSprint = competition.has_sprint_duels;
-  const hasLastDraft = competition.allows_event_draft;
+  const hasLastDraft = competition.allows_event_draft && Boolean(eventComposition);
+  const labels = squadLabels(competition.slug);
   const baseSize = squadSizeOf(composition);
-  const totalSize = hasLastDraft ? baseSize * 2 : baseSize;
+  const eventSize = eventComposition ? squadSizeOf(eventComposition) : 0;
+  const totalSize = hasLastDraft ? baseSize + eventSize : baseSize;
 
   type Mechanism = {
     n: string;
     title: string;
-    accent: "verde" | "amarillo" | "rosa";
+    accent: "verde" | "amarillo" | "rosa" | "rojo";
     body: string;
   };
   const mechanisms: Mechanism[] = [
@@ -135,13 +140,21 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
       title: "Tu equipo",
       accent: "amarillo",
       body: hasLastDraft
-        ? `Plantilla de ${totalSize} corredores en dos bloques: el Equipo Base, fijo toda la temporada, y el Last Draft, que recompones carrera a carrera.`
-        : `Un Equipo Base de ${baseSize} corredores, fijo para toda la competición.`,
+        ? `Plantilla de ${totalSize} corredores en dos bloques: el ${labels.base} (${baseSize}), fijo toda la temporada, y la ${labels.draft} (${eventSize}), que recompones carrera a carrera.`
+        : `Un ${labels.base} de ${baseSize} corredores, fijo para toda la competición.`,
+    },
+    {
+      n: "03",
+      title: "El Kopman",
+      accent: "rojo",
+      body: `Antes de cada carrera eliges un Kopman entre los corredores de tu ${labels.base}${
+        hasLastDraft ? ` y tu ${labels.draft}` : ""
+      } que la corren. Si puntúa, sus puntos valen el doble; si se queda fuera de los 20 primeros, te resta 50 puntos.`,
     },
   ];
   if (hasSprint) {
     mechanisms.push({
-      n: "03",
+      n: "04",
       title: "El Sprint",
       accent: "rosa" as const,
       body: "Un duelo contra otro participante en cada carrera, sorteado al inicio de temporada. Ganarlo suma puntos extra; perderlo, los resta.",
@@ -155,12 +168,11 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
         Cómo funciona {competition.name}
       </h1>
       <p className="mt-2 max-w-prose text-sm text-text-soft">
-        {mechanisms.length === 3
-          ? "Tres mecanismos evitan que la liga la gane siempre “el más obvio” y mantienen la pelea viva hasta la última carrera."
-          : "Estos mecanismos evitan que la liga la gane siempre “el más obvio” y mantienen la pelea viva hasta el final."}
+        Estos mecanismos evitan que la liga la gane siempre “el más obvio”
+        y mantienen la pelea viva hasta la última carrera.
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {mechanisms.map((m) => (
           <RuleCard key={m.n} n={m.n} title={m.title} accent={m.accent}>
             {m.body}
@@ -222,15 +234,15 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
           Cuanto menos favorito, más multiplica: una sorpresa bien elegida
           puede valer tanto como un ganador cantado.
         </p>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          {(Object.keys(composition) as RiderCategory[]).map((cat) => (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {CATEGORIES.map((cat) => (
             <CategoryCard key={cat} category={cat} />
           ))}
         </div>
 
         <div className="mt-4 rounded-2xl bg-surface p-5">
           <SquadBlock
-            title="Equipo Base"
+            title={labels.base}
             when={
               hasLastDraft
                 ? "Fijo para toda la temporada"
@@ -238,17 +250,17 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
             }
             composition={composition}
           />
-          {hasLastDraft && (
+          {hasLastDraft && eventComposition && (
             <>
               <div className="my-3 border-t border-dashed border-line" />
               <SquadBlock
-                title="Last Draft"
+                title={labels.draft}
                 when="Se recompone antes de cada carrera"
-                composition={composition}
+                composition={eventComposition}
               />
               <div className="mt-3 border-t border-dashed border-line pt-3 text-center font-display text-xs tracking-wide text-verde-deep">
-                {baseSize} + {baseSize} = {totalSize} CORREDORES EN TU
-                PLANTILLA
+                {baseSize} + {eventSize} = {totalSize} CORREDORES EN TU
+                PLANTILLA POR CARRERA
               </div>
             </>
           )}
@@ -317,7 +329,7 @@ function RuleCard({
 }: {
   n: string;
   title: string;
-  accent: "verde" | "amarillo" | "rosa";
+  accent: "verde" | "amarillo" | "rosa" | "rojo";
   children: React.ReactNode;
 }) {
   const borderColor =
@@ -325,6 +337,8 @@ function RuleCard({
       ? "border-t-verde"
       : accent === "amarillo"
       ? "border-t-amarillo"
+      : accent === "rojo"
+      ? "border-t-rojo"
       : "border-t-rosa";
   return (
     <div className={`rounded-2xl border-t-4 bg-surface p-4 ${borderColor}`}>
@@ -347,6 +361,7 @@ function Example({ title, children }: { title: string; children: React.ReactNode
 
 const CATEGORY_CLASSNAME: Record<RiderCategory, string> = {
   amarillo: "bg-gradient-to-br from-[#e9c03a] to-[#c8901a] text-on-accent",
+  rojo: "bg-gradient-to-br from-[#d6453a] to-[#9c2f27] text-white",
   rosa: "bg-gradient-to-br from-[#f58fb0] to-[#d16c93] text-on-accent",
   verde: "bg-gradient-to-br from-[#3f8663] to-[#1a4c36] text-white",
 };
@@ -354,6 +369,7 @@ const CATEGORY_CLASSNAME: Record<RiderCategory, string> = {
 const CATEGORY_DESCRIPTION: Record<RiderCategory, string> = {
   amarillo:
     "Top élite y favoritos indiscutibles. Ganan a menudo, pero apenas multiplican.",
+  rojo: "Segundo nivel de favoritos: candidatos muy serios, casi tan fiables como los amarillos.",
   rosa: "Corredores de élite, candidatos serios sin ser los favoritos absolutos.",
   verde:
     "El resto del pelotón. Menos probable que puntúen, pero cuando lo hacen, multiplican por dos.",
@@ -391,7 +407,7 @@ function SquadBlock({
       <h4 className="font-display text-sm text-verde-deep">{title}</h4>
       <div className="mb-2 text-[11px] text-text-soft">{when}</div>
       <div className="flex flex-wrap gap-2">
-        {(Object.keys(composition) as RiderCategory[]).map((cat) => {
+        {CATEGORIES.map((cat) => {
           const mult = DEFAULT_CATEGORY_MULTIPLIER[cat];
           const multLabel = Number.isInteger(mult)
             ? `×${mult}`

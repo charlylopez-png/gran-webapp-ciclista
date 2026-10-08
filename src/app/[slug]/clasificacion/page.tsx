@@ -4,23 +4,26 @@ import { getSession } from "@/lib/auth";
 import {
   getCompetition,
   getCompetitionRiders,
+  getCompetitionEvents,
   getAllEventResults,
+  getAllTeamEventDraft,
+  getAllEventKopman,
 } from "@/lib/competitions-data";
 import { getUserTeams } from "@/lib/teams";
-import { pointsForPosition, isPicksLocked } from "@/lib/competitions";
+import { pointsForPosition, isPicksLocked, kopmanAdjustment } from "@/lib/competitions";
 import CountryFlag from "@/components/country-flag";
 
-// Clasificación general: sustituye a /mundial/clasificacion (la única de
-// las dos que llegó a implementarse — la de clásicas se había quedado en
-// "próximamente"). Ahora es genérica para cualquier competición
-// squad_color: suma, para cada equipo, pointsForPosition(puesto) ×
-// multiplicador del corredor × coeficiente de la carrera (si la
-// competición tiene varias carreras con coeficiente propio, como
-// Clásicas; para una prueba única como el Mundial el coeficiente es 1).
+// Clasificación general: suma, carrera a carrera, los puntos de cada
+// equipo. En cada carrera cuentan TODOS los corredores que forman parte
+// de ella para ese equipo: su Klassiekerkern/Equipo Base (fijo toda la
+// temporada) MÁS su Wedstrijdselectie/Last Draft de esa carrera concreta
+// (si la competición la usa — team_event_draft). A ese total se le aplica
+// el ajuste de Kopman: si el Kopman de esa carrera puntuó, sus puntos
+// cuentan una vez más (×2 en total); si la carrera ya tiene resultado
+// cargado y no puntuó, resta 50 puntos fijos (ver kopmanAdjustment).
 //
-// Nota: todavía usa siempre la plantilla fija (team_squad) del equipo,
-// también para competiciones con Last Draft por carrera — el re-fichaje
-// por carrera (team_event_draft) está pendiente de pantalla propia.
+// pointsForPosition(puesto) × multiplicador del corredor × coeficiente de
+// la carrera (×1 en una prueba única como Mundial/Europeo/Lombardia).
 export default async function ClasificacionPage({
   params,
 }: {
@@ -63,13 +66,24 @@ export default async function ClasificacionPage({
   const riders = await getCompetitionRiders(competition.id, { onlyActive: false });
   const ridersById = new Map(riders.map((r) => [r.id, r]));
 
+  const events = await getCompetitionEvents(competition.id);
   const results = await getAllEventResults(competition.id);
+  const draftRows = await getAllTeamEventDraft(competition.id);
+  const kopmanRows = await getAllEventKopman(competition.id);
+
+  // Puntos de CADA corredor en CADA carrera (puesto × su multiplicador ×
+  // coeficiente de esa carrera) — se usa tanto para el total por equipo
+  // como para el total "de siempre" que se enseña junto a cada corredor.
+  const pointsByEventRider = new Map<string, number>();
   const riderPoints = new Map<string, number>();
+  const eventsWithResults = new Set<string>();
   for (const r of results) {
     const rider = ridersById.get(r.competition_rider_id);
     if (!rider) continue;
+    eventsWithResults.add(r.event_id);
     const eventMultiplier = r.event_multiplier ? Number(r.event_multiplier) : 1;
     const points = pointsForPosition(r.position) * Number(rider.multiplier) * eventMultiplier;
+    pointsByEventRider.set(`${r.event_id}:${r.competition_rider_id}`, points);
     riderPoints.set(
       r.competition_rider_id,
       (riderPoints.get(r.competition_rider_id) ?? 0) + points
@@ -82,6 +96,20 @@ export default async function ClasificacionPage({
     picksByTeam.get(row.team_id)!.push(row.competition_rider_id);
   }
 
+  // Wedstrijdselectie/Last Draft de cada equipo, por carrera.
+  const draftByTeamEvent = new Map<string, string[]>();
+  for (const row of draftRows) {
+    const key = `${row.team_id}:${row.event_id}`;
+    if (!draftByTeamEvent.has(key)) draftByTeamEvent.set(key, []);
+    draftByTeamEvent.get(key)!.push(row.competition_rider_id);
+  }
+
+  // Kopman elegido por cada equipo, por carrera.
+  const kopmanByTeamEvent = new Map<string, string>();
+  for (const row of kopmanRows) {
+    kopmanByTeamEvent.set(`${row.team_id}:${row.event_id}`, row.competition_rider_id);
+  }
+
   const myTeamIds = new Set(
     (await getUserTeams(session.userId, competition.id)).map((t) => t.id)
   );
@@ -89,7 +117,26 @@ export default async function ClasificacionPage({
   const standings = squadRows
     .map((s) => {
       const riderIds = picksByTeam.get(s.team_id) ?? [];
-      const total = riderIds.reduce((sum, id) => sum + (riderPoints.get(id) ?? 0), 0);
+      let total = 0;
+      for (const event of events) {
+        const draftIds = draftByTeamEvent.get(`${s.team_id}:${event.id}`) ?? [];
+        const effectiveIds = new Set([...riderIds, ...draftIds]);
+        let eventTotal = 0;
+        for (const id of effectiveIds) {
+          eventTotal += pointsByEventRider.get(`${event.id}:${id}`) ?? 0;
+        }
+
+        const kopmanRiderId = kopmanByTeamEvent.get(`${s.team_id}:${event.id}`) ?? null;
+        const kopmanPoints = kopmanRiderId
+          ? pointsByEventRider.get(`${event.id}:${kopmanRiderId}`) ?? 0
+          : null;
+        eventTotal += kopmanAdjustment({
+          hasResult: eventsWithResults.has(event.id),
+          kopmanPoints,
+        });
+
+        total += eventTotal;
+      }
       return {
         teamId: s.team_id,
         displayName: s.display_name,

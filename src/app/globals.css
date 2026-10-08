@@ -31,6 +31,7 @@
   --accent-verde: #5fc79b;
   --accent-amarillo: #e9c03a;
   --accent-gold: #c8901a;
+  --accent-rojo: #d6453a;
   --accent-rosa: #f58fb0;
 
   --pill-bg: #15140f;
@@ -66,6 +67,7 @@
   --color-verde-deep: var(--accent-verde-deep);
   --color-amarillo: var(--accent-amarillo);
   --color-gold: var(--accent-gold);
+  --color-rojo: var(--accent-rojo);
   --color-rosa: var(--accent-rosa);
   --color-on-accent: var(--on-accent);
   --font-display: var(--font-barlow-condensed);

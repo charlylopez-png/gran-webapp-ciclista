@@ -23,6 +23,12 @@ export type Competition = {
   allows_event_draft: boolean;
   picks_lock_at: string | Date | null;
   squad_composition: SquadComposition | null;
+  // Composición de la plantilla POR CARRERA (Wedstrijdselectie en UKT) —
+  // distinta de squad_composition (Klassiekerkern/Equipo Base, fija toda
+  // la temporada). Solo la rellenan las competiciones con
+  // allows_event_draft = true; en el resto queda null y cada carrera usa
+  // directamente el Equipo Base.
+  event_squad_composition: SquadComposition | null;
   budget_squad_size: number | null;
   budget_cap: string | number | null;
   real_team_pick_size: number | null;
@@ -95,17 +101,64 @@ export type CompetitionEvent = {
   stars: number | null;
   multiplier: string | number | null;
   logo_path: string | null;
+  // Web oficial y cierre del Last Draft de ESTA carrera (distinto del
+  // picks_lock_at de la competición, que es el del Equipo Base).
+  official_url: string | null;
+  picks_lock_at: string | Date | null;
 };
 
 export async function getCompetitionEvents(
   competitionId: string
 ): Promise<CompetitionEvent[]> {
   return (await sql`
-    select id, order_num, name, event_date, event_kind, stars, multiplier, logo_path
+    select id, order_num, name, event_date, event_kind, stars, multiplier,
+           logo_path, official_url, picks_lock_at
     from competition_events
     where competition_id = ${competitionId}
     order by order_num
   `) as CompetitionEvent[];
+}
+
+export async function getCompetitionEvent(
+  competitionId: string,
+  orderNum: number
+): Promise<CompetitionEvent | null> {
+  const rows = (await sql`
+    select id, order_num, name, event_date, event_kind, stars, multiplier,
+           logo_path, official_url, picks_lock_at
+    from competition_events
+    where competition_id = ${competitionId} and order_num = ${orderNum}
+  `) as CompetitionEvent[];
+  return rows[0] ?? null;
+}
+
+export type EventResultHistoryRow = {
+  position: number;
+  rider_name: string;
+  team: string | null;
+};
+
+export async function getEventResultHistory(
+  eventId: string,
+  editionYear: number
+): Promise<EventResultHistoryRow[]> {
+  return (await sql`
+    select position, rider_name, team
+    from event_result_history
+    where event_id = ${eventId} and edition_year = ${editionYear}
+    order by position
+  `) as EventResultHistoryRow[];
+}
+
+// Años de edición disponibles para un evento (para elegir cuál mostrar
+// si algún día hay más de una cargada).
+export async function getEventHistoryYears(eventId: string): Promise<number[]> {
+  const rows = (await sql`
+    select distinct edition_year from event_result_history
+    where event_id = ${eventId}
+    order by edition_year desc
+  `) as { edition_year: number }[];
+  return rows.map((r) => r.edition_year);
 }
 
 export async function getEventResults(
@@ -121,6 +174,47 @@ export async function getEventResults(
 // Todos los resultados de TODAS las carreras/pruebas de una competición de
 // una vez — lo que necesita la clasificación general para sumar puntos
 // por equipo sin hacer una consulta por carrera.
+// Todos los fichajes de Wedstrijdselectie/Last Draft de TODAS las
+// carreras de una competición de una vez — lo que necesita la
+// clasificación general para saber, carrera a carrera, qué corredores se
+// suman al Equipo Base de cada equipo (solo aplica donde
+// allows_event_draft = true; en el resto esta tabla está vacía).
+export async function getAllTeamEventDraft(
+  competitionId: string
+): Promise<{ team_id: string; event_id: string; competition_rider_id: string }[]> {
+  return (await sql`
+    select ted.team_id, ted.event_id, ted.competition_rider_id
+    from team_event_draft ted
+    join teams t on t.id = ted.team_id
+    where t.competition_id = ${competitionId}
+  `) as { team_id: string; event_id: string; competition_rider_id: string }[];
+}
+
+// El Kopman de UN equipo en UNA carrera (para la pantalla de esa carrera).
+export async function getEventKopman(
+  teamId: string,
+  eventId: string
+): Promise<string | null> {
+  const rows = (await sql`
+    select competition_rider_id from team_event_kopman
+    where team_id = ${teamId} and event_id = ${eventId}
+  `) as { competition_rider_id: string }[];
+  return rows[0]?.competition_rider_id ?? null;
+}
+
+// Todos los Kopman elegidos en TODAS las carreras de una competición —
+// para aplicar el bonus/penalización en la clasificación general.
+export async function getAllEventKopman(
+  competitionId: string
+): Promise<{ team_id: string; event_id: string; competition_rider_id: string }[]> {
+  return (await sql`
+    select tek.team_id, tek.event_id, tek.competition_rider_id
+    from team_event_kopman tek
+    join teams t on t.id = tek.team_id
+    where t.competition_id = ${competitionId}
+  `) as { team_id: string; event_id: string; competition_rider_id: string }[];
+}
+
 export async function getAllEventResults(
   competitionId: string
 ): Promise<

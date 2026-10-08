@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import {
+  CATEGORIES,
   CATEGORY_LABEL,
   squadCounts,
   squadSizeOf,
@@ -23,10 +24,9 @@ export type SelectableRider = {
   category: RiderCategory;
 };
 
-const CATEGORIES: RiderCategory[] = ["amarillo", "rosa", "verde"];
-
 const CATEGORY_STYLES: Record<RiderCategory, string> = {
   amarillo: "bg-amarillo text-on-accent",
+  rojo: "bg-rojo text-on-accent",
   rosa: "bg-rosa text-on-accent",
   verde: "bg-verde text-on-accent",
 };
@@ -91,9 +91,7 @@ export default function SquadSelector({
     !locked &&
     total === squadSize &&
     (teamName === undefined || name.trim().length > 0) &&
-    counts.amarillo === squadComposition.amarillo &&
-    counts.rosa === squadComposition.rosa &&
-    counts.verde === squadComposition.verde;
+    CATEGORIES.every((c) => counts[c] === squadComposition[c]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

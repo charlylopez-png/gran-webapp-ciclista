@@ -10,13 +10,21 @@
 // equipo la define cada competición en `competitions.squad_composition`
 // y estas funciones son genéricas sobre esa composición.
 
-export type RiderCategory = "amarillo" | "rosa" | "verde";
+// "rojo" se añade entre amarillo y rosa (×1.25) cuando se pasó de
+// plantillas de 6 a 7 corredores (1 amarillo + 1 rojo + 2 rosa + 3 verde)
+// en clasicas/mundial/europeo/lombardia.
+export type RiderCategory = "amarillo" | "rojo" | "rosa" | "verde";
 export type GameType = "squad_color" | "budget_draft";
 
 export type SquadComposition = Record<RiderCategory, number>;
 
+// Orden de categoría de favorito a sorpresa — se usa para pintar
+// contadores/filtros siempre en el mismo orden.
+export const CATEGORIES: RiderCategory[] = ["amarillo", "rojo", "rosa", "verde"];
+
 export const CATEGORY_LABEL: Record<RiderCategory, string> = {
   amarillo: "Amarillo",
+  rojo: "Rojo",
   rosa: "Rosa",
   verde: "Verde",
 };
@@ -25,16 +33,17 @@ export const CATEGORY_LABEL: Record<RiderCategory, string> = {
 // corredor (competition_riders.multiplier ya trae el suyo normalmente).
 export const DEFAULT_CATEGORY_MULTIPLIER: Record<RiderCategory, number> = {
   amarillo: 1,
+  rojo: 1.25,
   rosa: 1.5,
   verde: 2,
 };
 
 export function squadSizeOf(composition: SquadComposition) {
-  return composition.amarillo + composition.rosa + composition.verde;
+  return CATEGORIES.reduce((sum, c) => sum + (composition[c] ?? 0), 0);
 }
 
 export function squadCounts(categories: RiderCategory[]): SquadComposition {
-  const counts: SquadComposition = { amarillo: 0, rosa: 0, verde: 0 };
+  const counts: SquadComposition = { amarillo: 0, rojo: 0, rosa: 0, verde: 0 };
   for (const c of categories) counts[c]++;
   return counts;
 }
@@ -45,11 +54,17 @@ export function isValidSquad(
 ) {
   if (categories.length !== squadSizeOf(composition)) return false;
   const counts = squadCounts(categories);
-  return (
-    counts.amarillo === composition.amarillo &&
-    counts.rosa === composition.rosa &&
-    counts.verde === composition.verde
-  );
+  return CATEGORIES.every((c) => counts[c] === (composition[c] ?? 0));
+}
+
+// Nombres de la plantilla fija (temporada) y de la plantilla por carrera,
+// por competición — en UKT se llaman "Klassiekerkern" y
+// "Wedstrijdselectie"; en el resto, "Equipo Base" y "Last Draft".
+export function squadLabels(slug: string): { base: string; draft: string } {
+  if (slug === "clasicas") {
+    return { base: "Klassiekerkern", draft: "Wedstrijdselectie" };
+  }
+  return { base: "Equipo Base", draft: "Last Draft" };
 }
 
 export function isPicksLocked(picksLockAt: string | Date | null) {
@@ -67,6 +82,25 @@ export const POINTS_BY_POSITION: Record<number, number> = {
 export function pointsForPosition(position: number | null | undefined) {
   if (!position) return 0;
   return POINTS_BY_POSITION[position] ?? 0;
+}
+
+// Ajuste de Kopman sobre el total de UNA carrera para un equipo. El total
+// base de la carrera ya incluye los puntos del Kopman una vez (como
+// cualquier otro corredor de su plantilla); este ajuste es lo que hay que
+// SUMAR aparte para que, en conjunto, quede en ×2 si puntuó, o se resten
+// 50 puntos fijos si la carrera ya tiene resultado cargado y no puntuó
+// (quedó fuera de los 20 primeros). Si la carrera aún no tiene resultado,
+// o el equipo no eligió Kopman en ella, no hay ajuste.
+export function kopmanAdjustment({
+  hasResult,
+  kopmanPoints,
+}: {
+  hasResult: boolean;
+  kopmanPoints: number | null; // null = el equipo no eligió Kopman en esa carrera
+}): number {
+  if (kopmanPoints === null) return 0;
+  if (kopmanPoints > 0) return kopmanPoints;
+  return hasResult ? -50 : 0;
 }
 
 // ── Fechas ────────────────────────────────────────────────────────────
