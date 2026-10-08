@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import {
@@ -203,7 +204,7 @@ export default function SquadSelector({
             onClick={save}
             className="ml-auto rounded-full bg-[var(--accent)] px-4 py-2.5 font-display text-sm uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-40"
           >
-            {isPending ? "Guardando…" : `Guardar (${total}/${squadSize})`}
+            {isPending ? <><Spinner />Guardando…</> : `Guardar (${total}/${squadSize})`}
           </button>
         )}
       </div>

@@ -14,6 +14,7 @@ import { getSession, getImpersonationAdmin } from "@/lib/auth";
 import { listVisibleCompetitions } from "@/lib/competitions-data";
 import SiteHeader from "@/components/site-header";
 import ImpersonationBar from "@/components/impersonation-bar";
+import BusyBar from "@/components/busy-bar";
 
 // Identidad general: Barlow (cuerpo) + Barlow Condensed (display, wordmark).
 const barlow = Barlow({
@@ -122,6 +123,7 @@ export default async function RootLayout({
         {impersonationAdmin && session && (
           <ImpersonationBar actingAsName={session.displayName} />
         )}
+        <BusyBar />
         <SiteHeader session={session} competitions={competitions} />
         <main className="flex-1">{children}</main>
       </body>

@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import { useTransition } from "react";
 
 export default function ImpersonationBar({ actingAsName }: { actingAsName: string }) {
@@ -23,7 +24,7 @@ export default function ImpersonationBar({ actingAsName }: { actingAsName: strin
         onClick={stop}
         className="rounded-full border border-on-accent/40 px-3 py-1 hover:bg-on-accent/10 disabled:opacity-50"
       >
-        {isPending ? "Volviendo…" : "Volver a mi cuenta"}
+        {isPending ? <><Spinner />Volviendo…</> : "Volver a mi cuenta"}
       </button>
     </div>
   );

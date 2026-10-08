@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import { useState, useTransition } from "react";
 
 export default function ResetPasswordButton({
@@ -51,7 +52,7 @@ export default function ResetPasswordButton({
         onClick={reset}
         className="shrink-0 rounded-full border border-line px-3 py-1.5 font-display text-[11px] uppercase tracking-wide text-verde-deep hover:border-verde-deep disabled:opacity-50"
       >
-        {isPending ? "Restableciendo…" : "Restablecer contraseña"}
+        {isPending ? <><Spinner />Restableciendo…</> : "Restablecer contraseña"}
       </button>
 
       {result && "password" in result && (

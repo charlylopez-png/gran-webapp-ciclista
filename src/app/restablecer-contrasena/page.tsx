@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -100,7 +101,7 @@ export default function ResetPasswordPage() {
           disabled={loading}
           className="mt-2 rounded-full bg-[var(--accent)] px-5 py-2.5 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-60"
         >
-          {loading ? "Guardando…" : "Cambiar contraseña"}
+          {loading ? <><Spinner />Guardando…</> : "Cambiar contraseña"}
         </button>
       </form>
     </div>

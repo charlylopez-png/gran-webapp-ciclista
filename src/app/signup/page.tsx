@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -81,7 +82,7 @@ export default function SignupPage() {
           disabled={loading}
           className="mt-2 rounded-full bg-[var(--accent)] px-5 py-2.5 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-60"
         >
-          {loading ? "Creando…" : "Crear cuenta"}
+          {loading ? <><Spinner />Creando…</> : "Crear cuenta"}
         </button>
       </form>
 

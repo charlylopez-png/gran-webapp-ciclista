@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -43,7 +44,7 @@ export default function ManualPlayerForm() {
         disabled={isPending || !name.trim()}
         className="shrink-0 rounded-full bg-[var(--accent)] px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-40"
       >
-        {isPending ? "Añadiendo…" : "+ Añadir"}
+        {isPending ? <><Spinner />Añadiendo…</> : "+ Añadir"}
       </button>
       {error && <p className="text-xs text-rosa sm:self-center">{error}</p>}
     </form>

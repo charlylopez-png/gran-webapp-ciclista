@@ -381,3 +381,57 @@ h3,
 .comp-hero {
   background: var(--hero-pattern);
 }
+
+/* ---------------------------------------------------------------
+   Indicadores de carga (page-loader.tsx, busy-bar.tsx, spinner.tsx)
+   --------------------------------------------------------------- */
+/* Barra con la franja del pelotón que va y viene sobre una pista tenue */
+.tx-loader-track {
+  background: var(--line);
+}
+.tx-loader-bar {
+  background: var(--peloton-stripe);
+  animation: tx-loader-slide 1.1s ease-in-out infinite;
+}
+@keyframes tx-loader-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* Ruedas de la bici del icono girando */
+.tx-loader-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tx-spin 0.9s linear infinite;
+}
+
+/* Circulito de los botones: hereda el color del texto */
+.tx-spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.45em;
+  vertical-align: -0.12em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: tx-spin 0.7s linear infinite;
+}
+
+@keyframes tx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tx-loader-bar,
+  .tx-loader-wheel,
+  .tx-spinner {
+    animation-duration: 2.4s;
+  }
+}

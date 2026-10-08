@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -132,7 +133,7 @@ export default function EventAdminRow({ slug, event }: { slug: string; event: Ev
           disabled={isPending}
           className="rounded-full bg-[var(--accent)] px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-40"
         >
-          {isPending ? "Guardando…" : "Guardar"}
+          {isPending ? <><Spinner />Guardando…</> : "Guardar"}
         </button>
         {feedback && (
           <p className={`text-xs ${feedback.type === "ok" ? "text-verde-deep" : "text-rosa"}`}>

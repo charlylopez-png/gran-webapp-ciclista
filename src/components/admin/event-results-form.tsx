@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { CATEGORY_LABEL, POINTS_BY_POSITION, type RiderCategory } from "@/lib/competitions";
@@ -139,7 +140,7 @@ export default function EventResultsForm({
           disabled={isPending}
           className="rounded-full bg-[var(--accent)] px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-40"
         >
-          {isPending ? "Guardando…" : "Guardar resultado"}
+          {isPending ? <><Spinner />Guardando…</> : "Guardar resultado"}
         </button>
         {feedback && (
           <p className={`text-xs ${feedback.type === "ok" ? "text-verde-deep" : "text-rosa"}`}>

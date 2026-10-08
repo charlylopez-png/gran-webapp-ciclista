@@ -1,5 +1,6 @@
 "use client";
 
+import Spinner from "@/components/spinner";
 import { useTransition } from "react";
 
 export default function ImpersonateButton({ userId }: { userId: string }) {
@@ -25,7 +26,7 @@ export default function ImpersonateButton({ userId }: { userId: string }) {
       onClick={act}
       className="shrink-0 rounded-full border border-line px-3 py-1.5 font-display text-[11px] uppercase tracking-wide text-verde-deep hover:border-verde-deep disabled:opacity-50"
     >
-      {isPending ? "Entrando…" : "Actuar como"}
+      {isPending ? <><Spinner />Entrando…</> : "Actuar como"}
     </button>
   );
 }

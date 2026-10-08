@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { CATEGORY_LABEL, type RiderCategory } from "@/lib/competitions";
+import Spinner from "@/components/spinner";
 
 export type KopmanRider = {
   id: string; // competition_riders.id
@@ -81,7 +82,12 @@ export default function KopmanSelector({
               } ${locked ? "opacity-60" : ""}`}
             >
               <span className="min-w-0 truncate text-base">
-                {isSelected && <span className="mr-1.5 text-amarillo">★</span>}
+                {isSelected &&
+                  (isPending ? (
+                    <Spinner className="text-amarillo" />
+                  ) : (
+                    <span className="mr-1.5 text-amarillo">★</span>
+                  ))}
                 {rider.name}
               </span>
               <span
