@@ -106,6 +106,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#f3f1ec",
+  // Para que el iPhone dé los márgenes de seguridad (env(safe-area-inset-*))
+  // y la barra de pestañas de las competiciones no quede bajo la rayita de
+  // inicio, sobre todo con la app añadida a la pantalla de inicio.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({

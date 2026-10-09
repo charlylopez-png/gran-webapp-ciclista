@@ -55,7 +55,7 @@ export default async function CompetitionLayout({
   });
 
   return (
-    <div className={theme.scopeClassName}>
+    <div className={`min-h-screen ${theme.scopeClassName}`}>
       {theme.stripeClassName && <div className={theme.stripeClassName} />}
       <div className="comp-hero relative overflow-hidden px-5 pb-6 pt-8">
         {showCobble && (
@@ -91,7 +91,7 @@ export default async function CompetitionLayout({
       <div className="mx-auto max-w-3xl px-5 pb-8">
         <CompetitionNav items={navItems} homeHref={`/${slug}`} />
         {/* En móvil la barra de pestañas va fija abajo: hueco para que no tape el final. */}
-        <div className="mt-6 pb-28 sm:pb-10">{children}</div>
+        <div className="mt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:pb-10">{children}</div>
       </div>
     </div>
   );

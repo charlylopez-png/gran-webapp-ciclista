@@ -69,11 +69,12 @@ export default function CompetitionNav({ items, homeHref }: { items: Competition
       </nav>
 
       {/* Móvil: barra inferior fija */}
+      {/* Abajo deja el margen de la rayita de inicio del iPhone (10px mínimo en el resto). */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-[var(--bg)] pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-[var(--bg)] pb-[max(env(safe-area-inset-bottom),10px)] shadow-[0_-6px_20px_rgba(0,0,0,0.25)] sm:hidden"
         aria-label="Secciones"
       >
-        <div className="mx-auto flex max-w-md items-stretch">
+        <div className="mx-auto flex max-w-lg items-stretch px-1 pt-1.5">
           {mobileMain.map((item) => (
             <MobileTab key={item.href} item={item} active={isActive(item.href)} />
           ))}
@@ -82,11 +83,13 @@ export default function CompetitionNav({ items, homeHref }: { items: Competition
               type="button"
               onClick={() => setMoreOpen((v) => !v)}
               aria-expanded={moreOpen}
-              className={`flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 px-1 text-[11px] font-semibold ${
-                moreActive || moreOpen ? "text-[var(--accent)]" : "text-text-soft"
+              className={`flex min-h-[62px] min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold ${
+                moreActive || moreOpen ? "text-text" : "text-text-soft"
               }`}
             >
-              <Icon name={moreOpen ? "close" : "more"} />
+              <ActivePill active={moreActive || moreOpen}>
+                <Icon name={moreOpen ? "close" : "more"} />
+              </ActivePill>
               Más
             </button>
           )}
@@ -98,7 +101,7 @@ export default function CompetitionNav({ items, homeHref }: { items: Competition
         <div className="fixed inset-0 z-30 sm:hidden" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-0 bg-black/40" />
           <div
-            className="absolute inset-x-0 bottom-0 rounded-t-3xl border-t border-line bg-[var(--bg)] px-4 pb-[calc(76px+env(safe-area-inset-bottom))] pt-3 shadow-2xl"
+            className="absolute inset-x-0 bottom-0 rounded-t-3xl border-t border-line bg-[var(--bg)] px-4 pb-[calc(92px+env(safe-area-inset-bottom))] pt-3 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--line)]" />
@@ -158,20 +161,35 @@ function MobileTab({ item, active }: { item: CompetitionNavItem; active: boolean
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
-      className={`relative flex min-h-[60px] min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-[11px] font-semibold ${
-        active ? "text-[var(--accent)]" : "text-text-soft"
+      className={`flex min-h-[62px] min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold ${
+        active ? "text-text" : "text-text-soft"
       }`}
     >
-      {active && <span className="absolute inset-x-5 top-0 h-[3px] rounded-b-full bg-[var(--accent)]" />}
-      <Icon name={item.icon} />
-      <span className="max-w-full truncate">{item.shortLabel ?? item.label}</span>
+      <ActivePill active={active}>
+        <Icon name={item.icon} />
+      </ActivePill>
+      <span className="max-w-full truncate px-0.5">{item.shortLabel ?? item.label}</span>
     </Link>
+  );
+}
+
+// Pastilla detrás del icono de la pestaña activa (como en las apps de
+// iPhone/Android): se ve de un vistazo dónde estás, más que un subrayado.
+function ActivePill({ active, children }: { active: boolean; children: React.ReactNode }) {
+  return (
+    <span
+      className={`flex h-8 w-14 items-center justify-center rounded-full transition ${
+        active ? "bg-[var(--accent)] text-on-accent" : ""
+      }`}
+    >
+      {children}
+    </span>
   );
 }
 
 // Iconos de trazo (24×24), en el color del texto.
 function Icon({ name, small = false }: { name: NavIcon | "more" | "close"; small?: boolean }) {
-  const size = small ? 18 : 22;
+  const size = small ? 18 : 24;
   const paths: Record<string, React.ReactNode> = {
     home: <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />,
     team: (
