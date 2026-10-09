@@ -52,6 +52,7 @@ export default async function GrandTourStageAdminPage({
           slug={slug}
           eventId={stage.id}
           isLast={isLast}
+          teamTimeTrial={stage.type === "contrarreloj_equipos"}
           riders={data.riders.map((r) => ({ id: r.id, name: r.name, team: r.team }))}
           teams={data.realTeams}
           initialLists={initialLists}

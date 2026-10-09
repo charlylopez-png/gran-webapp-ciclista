@@ -72,17 +72,17 @@ export default async function GrandTourClasificacion({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex rounded-2xl border border-line bg-surface p-1 sm:inline-flex">
         <Tab href={`/${slug}/clasificacion`} active={view === "general"}>
           General
         </Tab>
         <Tab href={`/${slug}/clasificacion?vista=ultima`} active={view === "ultima"}>
           Última etapa
         </Tab>
-        <span className="ml-auto text-xs text-text-soft">
-          {lastStage ? `Tras la etapa ${lastStage.order}` : "Aún no hay etapas puntuadas"}
-        </span>
       </div>
+      <p className="mt-2 text-xs text-text-soft">
+        {lastStage ? `Tras la etapa ${lastStage.order}` : "Aún no hay etapas puntuadas"}
+      </p>
       {view === "ultima" && lastStage && (
         <p className="mt-3 text-sm text-text-soft">
           Etapa {lastStage.order}
@@ -103,8 +103,9 @@ function Tab({ href, active, children }: { href: string; active: boolean; childr
   return (
     <Link
       href={href}
-      className={`rounded-full border px-4 py-2 font-display text-xs uppercase tracking-wide ${
-        active ? "border-verde-deep bg-verde-deep text-on-accent" : "border-line bg-surface text-text-soft"
+      aria-current={active ? "page" : undefined}
+      className={`flex-1 rounded-xl px-5 py-2.5 text-center text-sm font-semibold transition sm:flex-none ${
+        active ? "bg-[var(--accent)] text-on-accent shadow-sm" : "text-text-soft hover:text-text"
       }`}
     >
       {children}

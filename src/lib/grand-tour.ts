@@ -10,11 +10,16 @@
 // suplente cuando se retira un titular, así que la plantilla que puntúa
 // depende de la etapa.
 
-export type StageListKind = "etapa" | "general" | "puntos" | "montana" | "equipos";
+export type StageListKind = "etapa" | "general" | "puntos" | "montana" | "equipos" | "etapa_equipos";
 export type FinalListKind = "general_final" | "puntos_final" | "montana_final" | "equipos_final";
 export type ListKind = StageListKind | FinalListKind;
 
+// Los cinco listados de cada etapa (los que se enseñan siempre).
 export const STAGE_LIST_KINDS: StageListKind[] = ["etapa", "general", "puntos", "montana", "equipos"];
+// Más el de la contrarreloj por equipos (CRE): en esas etapas el resultado
+// lo protagonizan los equipos, que se llevan la escala grande de "etapa"
+// (como en la app anterior). Solo tiene datos en etapas de ese tipo.
+export const SCORING_STAGE_KINDS: StageListKind[] = [...STAGE_LIST_KINDS, "etapa_equipos"];
 export const FINAL_LIST_KINDS: FinalListKind[] = [
   "general_final",
   "puntos_final",
@@ -29,6 +34,7 @@ export const POINTS_TABLE: Record<ListKind, number[]> = {
   puntos: [25, 20, 15, 10, 5],
   montana: [25, 20, 15, 10, 5],
   equipos: [25, 20, 15, 10, 5],
+  etapa_equipos: [100, 80, 70, 60, 50, 40, 30, 20, 10, 5],
   general_final: [600, 400, 200, 125, 100, 80, 70, 60, 50, 40],
   puntos_final: [125, 75, 50, 30, 15],
   montana_final: [125, 75, 50, 30, 15],
@@ -41,6 +47,7 @@ export const LIST_LABEL: Record<ListKind, string> = {
   puntos: "Regularidad / puntos",
   montana: "KOM / montaña",
   equipos: "Equipos",
+  etapa_equipos: "Etapa (equipos · CRE)",
   general_final: "General final",
   puntos_final: "Regularidad final",
   montana_final: "Montaña final",
@@ -53,6 +60,7 @@ export const LIST_ICON: Record<ListKind, string> = {
   puntos: "🟢",
   montana: "🔴",
   equipos: "🚩",
+  etapa_equipos: "👥",
   general_final: "👑",
   puntos_final: "🟢",
   montana_final: "🔴",
@@ -62,7 +70,7 @@ export const LIST_ICON: Record<ListKind, string> = {
 // Qué listas son de equipos ciclistas (puntúan a los 3 equipos elegidos)
 // y cuáles de corredores.
 export function isTeamList(kind: ListKind) {
-  return kind === "equipos" || kind === "equipos_final";
+  return kind === "equipos" || kind === "equipos_final" || kind === "etapa_equipos";
 }
 
 export function pointsAt(kind: ListKind, position: number) {
@@ -143,7 +151,7 @@ export function scoreStage(
   roster: GtRoster,
   stageOrder: number,
   result: GtStageResult | undefined,
-  kinds: ListKind[] = STAGE_LIST_KINDS
+  kinds: ListKind[] = SCORING_STAGE_KINDS
 ): { total: number; contributions: Contribution[] } {
   if (!result) return { total: 0, contributions: [] };
   const riders = new Set(activeRidersAt(roster, stageOrder));
@@ -253,7 +261,7 @@ export function rankRows<T extends { position: number }>(rows: T[], score: (r: T
 }
 
 export function hasStageResults(result: GtStageResult | undefined) {
-  return Boolean(result && STAGE_LIST_KINDS.some((k) => (result.lists[k]?.length ?? 0) > 0));
+  return Boolean(result && SCORING_STAGE_KINDS.some((k) => (result.lists[k]?.length ?? 0) > 0));
 }
 
 export function hasFinalResults(result: GtStageResult | undefined) {
@@ -269,7 +277,7 @@ export function pointsByEntry(results: GtStageResult[]): {
   const riders = new Map<string, number>();
   const teams = new Map<string, number>();
   for (const result of results) {
-    for (const kind of [...STAGE_LIST_KINDS, ...FINAL_LIST_KINDS]) {
+    for (const kind of [...SCORING_STAGE_KINDS, ...FINAL_LIST_KINDS]) {
       for (const entry of result.lists[kind] ?? []) {
         const pts = pointsAt(kind, entry.position);
         if (!pts) continue;

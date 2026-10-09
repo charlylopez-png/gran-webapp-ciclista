@@ -4,7 +4,7 @@ import { sql, transaction } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { getCompetition } from "@/lib/competitions-data";
 import { getGrandTourRealTeams, getGrandTourRiders, grandTourConfig } from "@/lib/grand-tour-data";
-import { FINAL_LIST_KINDS, POINTS_TABLE, STAGE_LIST_KINDS, isTeamList, normalizeName, type ListKind } from "@/lib/grand-tour";
+import { FINAL_LIST_KINDS, POINTS_TABLE, SCORING_STAGE_KINDS, isTeamList, normalizeName, type ListKind } from "@/lib/grand-tour";
 
 // Admin de UNA etapa de una gran vuelta: sus listados oficiales (etapa,
 // general, regularidad, montaña, equipos y, en la última, las finales),
@@ -12,7 +12,7 @@ import { FINAL_LIST_KINDS, POINTS_TABLE, STAGE_LIST_KINDS, isTeamList, normalize
 // ella (abre la sustitución a quien los lleve). Cada listado sustituye al
 // anterior entero. Los nombres se enlazan con los corredores/equipos de la
 // competición; los que no casen se guardan igual pero no puntúan.
-const listKinds = [...STAGE_LIST_KINDS, ...FINAL_LIST_KINDS] as [ListKind, ...ListKind[]];
+const listKinds = [...SCORING_STAGE_KINDS, ...FINAL_LIST_KINDS] as [ListKind, ...ListKind[]];
 
 const BodySchema = z.object({
   lists: z.partialRecord(z.enum(listKinds), z.array(z.string().trim().max(120)).max(20)),

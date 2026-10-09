@@ -5,7 +5,7 @@ import {
   FINAL_LIST_KINDS,
   LIST_ICON,
   LIST_LABEL,
-  STAGE_LIST_KINDS,
+  SCORING_STAGE_KINDS,
   activeRidersAt,
   computeStandings,
   hasStageResults,
@@ -74,7 +74,7 @@ export default function GrandTourDataTabs({
   const riderBreakdown = useMemo(() => {
     const map = new Map<string, Record<string, number>>();
     for (const result of results) {
-      for (const kind of [...STAGE_LIST_KINDS, ...FINAL_LIST_KINDS]) {
+      for (const kind of [...SCORING_STAGE_KINDS, ...FINAL_LIST_KINDS]) {
         if (isTeamList(kind)) continue;
         for (const e of result.lists[kind] ?? []) {
           if (!e.riderId) continue;
@@ -111,14 +111,18 @@ export default function GrandTourDataTabs({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-1.5">
+      {/* En móvil, una sola fila que se desliza en horizontal (sin cortar). */}
+      <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
         {SECTIONS.map((s) => (
           <button
             key={s.key}
             type="button"
             onClick={() => setSection(s.key)}
-            className={`rounded-full border px-3 py-1.5 text-xs ${
-              section === s.key ? "border-verde-deep bg-verde-deep text-on-accent" : "border-line bg-surface text-text-soft"
+            aria-pressed={section === s.key}
+            className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold ${
+              section === s.key
+                ? "border-[var(--accent)] bg-[var(--accent)] text-on-accent"
+                : "border-line bg-surface text-text-soft"
             }`}
           >
             {s.label}
@@ -587,7 +591,7 @@ function VarSection({
   }
 
   const isLast = stage && stage.order === stages[stages.length - 1].order;
-  const kinds: ListKind[] = isLast ? [...STAGE_LIST_KINDS, ...FINAL_LIST_KINDS] : STAGE_LIST_KINDS;
+  const kinds: ListKind[] = isLast ? [...SCORING_STAGE_KINDS, ...FINAL_LIST_KINDS] : SCORING_STAGE_KINDS;
   const active = roster && stage ? new Set(activeRidersAt(roster, stage.order)) : new Set<string>();
   const teams = new Set(roster?.realTeams ?? []);
   const lines: { kind: ListKind; position: number; name: string; points: number }[] = [];

@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getCompetition } from "@/lib/competitions-data";
@@ -7,6 +6,7 @@ import { isPicksLocked, formatEventDate, squadLabels } from "@/lib/competitions"
 import { getCompetitionTheme } from "@/lib/competition-theme";
 import CobbleBackground from "@/components/cobble-background";
 import { grandTourConfig } from "@/lib/grand-tour-data";
+import CompetitionNav, { type CompetitionNavItem } from "@/components/competition-nav";
 
 // Envoltorio de tema por competición: sustituye a src/app/mundial/layout.tsx
 // (que era a medida solo para el Mundial). Aplica la clase de tema
@@ -42,6 +42,17 @@ export default async function CompetitionLayout({
   const openText = isGrandTour
     ? `Plantillas abiertas hasta ${lockDate}.`
     : `${labels.base} abierto hasta ${lockDate}.`;
+  const isAdmin = session?.role === "admin";
+  const navItems = buildNavItems({
+    slug,
+    season: competition.season,
+    approved: Boolean(session && (session.status === "approved" || isAdmin)),
+    isAdmin,
+    canPrice: Boolean(isAdmin || session?.sanedrin),
+    hasEvents: Boolean(hasEvents),
+    isGrandTour,
+    baseLabel: labels.baseShort,
+  });
 
   return (
     <div className={theme.scopeClassName}>
@@ -78,50 +89,55 @@ export default async function CompetitionLayout({
         </div>
       </div>
       <div className="mx-auto max-w-3xl px-5 pb-8">
-        <nav className="mt-5 flex flex-wrap gap-1.5">
-          {session?.status === "approved" && <SubNavLink href={`/${slug}`}>Inicio</SubNavLink>}
-          <SubNavLink href={`/${slug}/reglamento`}>Reglamento</SubNavLink>
-          <SubNavLink href={`/${slug}/edicion-anterior`}>Edición {competition.season - 1}</SubNavLink>
-          {session?.status === "approved" && (
-            <>
-              {hasEvents && (
-                <>
-                  <SubNavLink href={`/${slug}/equipo`}>Mi {labels.baseShort}</SubNavLink>
-                  <SubNavLink href={`/${slug}/calendario`}>Calendario</SubNavLink>
-                  <SubNavLink href={`/${slug}/equipos`}>Equipos</SubNavLink>
-                </>
-              )}
-              {isGrandTour && (
-                <>
-                  <SubNavLink href={`/${slug}/equipo`}>Mi equipo</SubNavLink>
-                  <SubNavLink href={`/${slug}/etapas`}>Etapas</SubNavLink>
-                </>
-              )}
-              <SubNavLink href={`/${slug}/clasificacion`}>Clasificación</SubNavLink>
-              {isGrandTour && <SubNavLink href={`/${slug}/data`}>Data</SubNavLink>}
-            </>
-          )}
-          {isGrandTour && (session?.role === "admin" || session?.sanedrin) && (
-            <SubNavLink href={`/${slug}/precios`}>Precios</SubNavLink>
-          )}
-          {session?.role === "admin" && (
-            <SubNavLink href={`/${slug}/admin`}>Admin</SubNavLink>
-          )}
-        </nav>
-
-        <div className="mt-6 pb-10">{children}</div>
+        <CompetitionNav items={navItems} homeHref={`/${slug}`} />
+        {/* En móvil la barra de pestañas va fija abajo: hueco para que no tape el final. */}
+        <div className="mt-6 pb-28 sm:pb-10">{children}</div>
       </div>
     </div>
   );
 }
 
-function SubNavLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="rounded-full border border-line bg-surface px-3.5 py-2 font-display text-xs uppercase tracking-wide text-text-soft hover:border-verde-deep/50"
-    >
-      {children}
-    </Link>
-  );
+// Pestañas de la competición, de más a menos usadas: las "primary" van en la
+// barra inferior del móvil; el resto, en su panel "Más".
+function buildNavItems({
+  slug,
+  season,
+  approved,
+  isAdmin,
+  canPrice,
+  hasEvents,
+  isGrandTour,
+  baseLabel,
+}: {
+  slug: string;
+  season: number;
+  approved: boolean;
+  isAdmin: boolean;
+  canPrice: boolean;
+  hasEvents: boolean;
+  isGrandTour: boolean;
+  baseLabel: string;
+}): CompetitionNavItem[] {
+  const base = `/${slug}`;
+  const items: CompetitionNavItem[] = [];
+  if (approved) {
+    items.push({ href: base, label: "Inicio", icon: "home", primary: true });
+    if (isGrandTour) {
+      items.push({ href: `${base}/equipo`, label: "Mi equipo", icon: "team", primary: true });
+      items.push({ href: `${base}/etapas`, label: "Etapas", icon: "stages", primary: true });
+    } else if (hasEvents) {
+      items.push({ href: `${base}/equipo`, label: `Mi ${baseLabel}`, shortLabel: "Mi equipo", icon: "team", primary: true });
+      items.push({ href: `${base}/calendario`, label: "Calendario", icon: "calendar", primary: true });
+    }
+    items.push({ href: `${base}/clasificacion`, label: "Clasificación", icon: "trophy", primary: true });
+    if (isGrandTour) items.push({ href: `${base}/data`, label: "Data", icon: "data" });
+    if (hasEvents) items.push({ href: `${base}/equipos`, label: "Equipos", icon: "teams" });
+  }
+  // Sin sesión aprobada, reglamento y edición pasada son lo único que hay:
+  // van como principales para que se vean en la barra.
+  items.push({ href: `${base}/edicion-anterior`, label: `Edición ${season - 1}`, icon: "history", primary: !approved });
+  items.push({ href: `${base}/reglamento`, label: "Reglamento", icon: "rules", primary: !approved });
+  if (isGrandTour && canPrice) items.push({ href: `${base}/precios`, label: "Precios", icon: "prices" });
+  if (isAdmin) items.push({ href: `${base}/admin`, label: "Admin", icon: "admin" });
+  return items;
 }

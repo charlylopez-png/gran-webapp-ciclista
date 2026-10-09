@@ -125,9 +125,11 @@ export default async function StageDetailPage({
               Listados oficiales
             </h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {STAGE_LIST_KINDS.map((kind) => (
-                <OfficialList key={kind} kind={kind} entries={result?.lists[kind] ?? []} />
-              ))}
+              {(result?.lists.etapa_equipos?.length ? [...STAGE_LIST_KINDS, "etapa_equipos" as const] : STAGE_LIST_KINDS).map(
+                (kind) => (
+                  <OfficialList key={kind} kind={kind} entries={result?.lists[kind] ?? []} />
+                )
+              )}
             </div>
           </section>
 

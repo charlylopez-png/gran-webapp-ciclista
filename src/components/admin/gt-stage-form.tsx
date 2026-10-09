@@ -22,6 +22,7 @@ export default function GtStageForm({
   slug,
   eventId,
   isLast,
+  teamTimeTrial,
   riders,
   teams,
   initialLists,
@@ -33,6 +34,7 @@ export default function GtStageForm({
   slug: string;
   eventId: string;
   isLast: boolean;
+  teamTimeTrial: boolean;
   riders: { id: string; name: string; team: string | null }[];
   teams: { id: string; name: string }[];
   initialLists: Partial<Record<ListKind, string[]>>;
@@ -42,7 +44,13 @@ export default function GtStageForm({
   withdrawnElsewhere: { id: string; stage: number }[];
 }) {
   const router = useRouter();
-  const kinds: ListKind[] = isLast ? [...STAGE_LIST_KINDS, ...FINAL_LIST_KINDS] : STAGE_LIST_KINDS;
+  // El listado de la contrarreloj por equipos solo sale en etapas de ese
+  // tipo (o si ya tiene datos).
+  const stageKinds: ListKind[] =
+    teamTimeTrial || (initialLists.etapa_equipos?.length ?? 0) > 0
+      ? [...STAGE_LIST_KINDS, "etapa_equipos"]
+      : STAGE_LIST_KINDS;
+  const kinds: ListKind[] = isLast ? [...stageKinds, ...FINAL_LIST_KINDS] : stageKinds;
   const [lists, setLists] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(
       kinds.map((k) => [
