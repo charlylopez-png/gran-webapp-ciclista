@@ -5,6 +5,8 @@ import { getSession } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { getCompetition, getCompetitionEvents } from "@/lib/competitions-data";
 import { getActiveTeam } from "@/lib/teams";
+import { grandTourConfig } from "@/lib/grand-tour-data";
+import GrandTourHome from "./grand-tour-home";
 import { formatEventDate, isPicksLocked, squadLabels, squadSizeOf } from "@/lib/competitions";
 
 // Inicio de una competición: reglamento en corto, estado del Equipo Base
@@ -31,8 +33,12 @@ export default async function CompetitionHomePage({
     );
   }
 
-  // Giro/Tour/Vuelta: dadas de alta para reservar su hueco en la portada,
-  // pero su motor de fichaje por presupuesto todavía no existe.
+  // Gran vuelta ya montada (Giro; Tour y Vuelta cuando se clonen).
+  if (grandTourConfig(competition)) {
+    return <GrandTourHome competition={competition} session={session} />;
+  }
+
+  // Giro/Tour/Vuelta todavía sin montar: reservan su hueco en la portada.
   if (competition.game_type !== "squad_color" || !competition.squad_composition) {
     return (
       <div className="rounded-2xl border border-line bg-surface p-4">

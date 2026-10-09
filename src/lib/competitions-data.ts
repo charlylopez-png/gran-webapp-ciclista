@@ -31,6 +31,9 @@ export type Competition = {
   event_squad_composition: SquadComposition | null;
   budget_squad_size: number | null;
   budget_cap: string | number | null;
+  // Grandes vueltas: suplentes (aparte del presupuesto) y equipos ciclistas
+  // que elige cada participante (sin precio). Ver lib/grand-tour-data.ts.
+  budget_bench_size: number | null;
   real_team_pick_size: number | null;
   // Ficha informativa de la carrera (opcional, cualquier competición):
   // enlace oficial, imagen de recorrido, distancia/desnivel y notas de

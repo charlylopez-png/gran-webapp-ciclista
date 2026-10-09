@@ -9,6 +9,14 @@ import {
   squadSizeOf,
   type RiderCategory,
 } from "@/lib/competitions";
+import {
+  FINAL_LIST_KINDS,
+  LIST_ICON,
+  LIST_LABEL,
+  POINTS_TABLE,
+  STAGE_LIST_KINDS,
+  type ListKind,
+} from "@/lib/grand-tour";
 
 // Reglamento por competición: antes era una única página estática escrita
 // a mano solo para UKT (src/app/reglamento/page.tsx). Carlos pidió que el
@@ -273,6 +281,7 @@ function SquadColorReglamento({ competition }: { competition: Competition }) {
 function BudgetDraftReglamento({ competition }: { competition: Competition }) {
   const squadSize = competition.budget_squad_size;
   const cap = competition.budget_cap;
+  if (squadSize && cap) return <GrandTourReglamento competition={competition} />;
   return (
     <div>
       <Kicker>Las reglas, en corto</Kicker>
@@ -307,6 +316,115 @@ function BudgetDraftReglamento({ competition }: { competition: Competition }) {
           los corredores y sus costes, esta página mostrará la tabla
           completa.
         </p>
+      </div>
+    </div>
+  );
+}
+
+// Reglamento de una gran vuelta ya montada (Giro; Tour y Vuelta cuando se
+// clonen): presupuesto, titulares, suplentes, equipos y el baremo de
+// lib/grand-tour.ts — se lee de ahí para que nunca se desincronice del
+// motor de puntos.
+function GrandTourReglamento({ competition }: { competition: Competition }) {
+  const squadSize = competition.budget_squad_size!;
+  const cap = Number(competition.budget_cap);
+  const bench = competition.budget_bench_size ?? 0;
+  const realTeams = competition.real_team_pick_size ?? 0;
+  const name = competition.short_name ?? competition.name;
+
+  return (
+    <div>
+      <Kicker>Las reglas, en corto</Kicker>
+      <h1 className="text-2xl text-verde-deep">Cómo funciona {competition.name}</h1>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <RuleCard n="01" title="Presupuesto" accent="amarillo">
+          Cada equipo parte de {cap.toLocaleString("es-ES")} puntos. Antes de la fecha de
+          cierre formas un equipo de {squadSize} corredores que no pase de ese presupuesto:
+          cada corredor tiene un precio en puntos.
+        </RuleCard>
+        {realTeams > 0 && (
+          <RuleCard n="02" title={`${realTeams} equipos ciclistas`} accent="verde">
+            Además eliges {realTeams} equipos ciclistas, sin coste. Puntúan en la
+            clasificación por equipos de cada etapa y en la final.
+          </RuleCard>
+        )}
+        {bench > 0 && (
+          <RuleCard n={realTeams > 0 ? "03" : "02"} title={`${bench} suplentes`} accent="rosa">
+            Fuera del presupuesto. Solo entran si un titular se cae o se retira por
+            enfermedad, y puntúan desde la etapa en la que entran.
+          </RuleCard>
+        )}
+        <RuleCard n={String(2 + (realTeams > 0 ? 1 : 0) + (bench > 0 ? 1 : 0)).padStart(2, "0")} title="Puntúan las etapas" accent="rojo">
+          Cada día suman los corredores y equipos de tu plantilla que aparezcan en la
+          etapa, la general, la regularidad, la montaña y la clasificación por equipos;
+          al acabar {name}, un bonus por las clasificaciones finales.
+        </RuleCard>
+      </div>
+
+      {bench > 0 && (
+        <div className="mt-8 rounded-2xl bg-surface p-5">
+          <h2 className="font-display text-sm text-verde-deep">Los suplentes, al detalle</h2>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-text-soft">
+            <li>
+              Solo actúan por <b>caída o retirada por enfermedad</b> de un titular. Cuando se
+              confirma la retirada, eliges cuál de tus suplentes entra.
+            </li>
+            <li>
+              El suplente tiene que valer <b>menos</b> que el corredor al que sustituye. Nunca
+              igual ni más.
+            </li>
+            <li>
+              Excepción: si el retirado está en el escalón más bajo de precio (50 pt), puede
+              entrar otro de 50.
+            </li>
+            <li>
+              Si no tienes ningún suplente que cumpla la condición, no puedes sustituir y
+              sigues con el equipo incompleto.
+            </li>
+            <li>Los suplentes solo puntúan desde la etapa en la que entran.</li>
+          </ul>
+        </div>
+      )}
+
+      <GrandTourPointsTables />
+    </div>
+  );
+}
+
+export function GrandTourPointsTables() {
+  return (
+    <>
+      <div className="mt-10">
+        <Kicker>Sistema de puntuación</Kicker>
+        <h2 className="text-xl text-verde-deep">Cada etapa (se suma cada día)</h2>
+        <div className="mt-3 flex flex-col gap-2">
+          {STAGE_LIST_KINDS.map((kind) => (
+            <PointsRow key={kind} kind={kind} />
+          ))}
+        </div>
+      </div>
+      <div className="mt-8 pb-6">
+        <h2 className="text-xl text-verde-deep">Bonus final (solo una vez, al acabar)</h2>
+        <div className="mt-3 flex flex-col gap-2">
+          {FINAL_LIST_KINDS.map((kind) => (
+            <PointsRow key={kind} kind={kind} />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function PointsRow({ kind }: { kind: ListKind }) {
+  const table = POINTS_TABLE[kind];
+  return (
+    <div className="rounded-xl border border-line bg-surface px-4 py-3">
+      <div className="text-sm font-semibold text-text">
+        {LIST_ICON[kind]} {LIST_LABEL[kind]} (top {table.length})
+      </div>
+      <div className="mt-1 text-xs text-text-soft">
+        {table.map((pts, i) => `${i + 1}º: ${pts}`).join(" · ")}
       </div>
     </div>
   );

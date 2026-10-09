@@ -12,6 +12,8 @@ import {
 import { getUserTeams } from "@/lib/teams";
 import { pointsForPosition, isPicksLocked, kopmanAdjustment } from "@/lib/competitions";
 import CountryFlag from "@/components/country-flag";
+import { grandTourConfig } from "@/lib/grand-tour-data";
+import GrandTourClasificacion from "./grand-tour-clasificacion";
 
 // Clasificación general: suma, carrera a carrera, los puntos de cada
 // equipo. En cada carrera cuentan TODOS los corredores que forman parte
@@ -26,8 +28,10 @@ import CountryFlag from "@/components/country-flag";
 // la carrera (×1 en una prueba única como Mundial/Europeo/Lombardia).
 export default async function ClasificacionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ vista?: string }>;
 }) {
   const { slug } = await params;
   const competition = await getCompetition(slug);
@@ -35,6 +39,17 @@ export default async function ClasificacionPage({
 
   const session = await getSession();
   if (!session) return null;
+
+  if (grandTourConfig(competition)) {
+    const { vista } = await searchParams;
+    return (
+      <GrandTourClasificacion
+        competition={competition}
+        session={session}
+        view={vista === "ultima" ? "ultima" : "general"}
+      />
+    );
+  }
 
   if (competition.game_type !== "squad_color") {
     return (

@@ -6,6 +6,8 @@ import { getActiveTeam } from "@/lib/teams";
 import { isPicksLocked } from "@/lib/competitions";
 import SquadSelector, { type SelectableRider } from "@/components/squad-selector";
 import TeamSwitcher from "@/components/team-switcher";
+import { grandTourConfig } from "@/lib/grand-tour-data";
+import GrandTourEquipo from "./grand-tour-equipo";
 
 // Pantalla de fichaje: sustituye a /mi-equipo (solo clásicas) y a
 // /mundial/eleccion + /mundial/equipo (solo Mundial). Una sola pantalla,
@@ -20,6 +22,17 @@ export default async function CompetitionEquipoPage({
   const { slug } = await params;
   const competition = await getCompetition(slug);
   if (!competition || competition.status === "hidden") notFound();
+
+  const gtConfig = grandTourConfig(competition);
+  if (gtConfig) {
+    const gtSession = await getSession();
+    if (!gtSession) redirect("/login");
+    if (gtSession.role !== "admin" && gtSession.status !== "approved") {
+      return <p className="text-sm text-text-soft">Tu cuenta todavía no está aprobada.</p>;
+    }
+    return <GrandTourEquipo competition={competition} config={gtConfig} session={gtSession} />;
+  }
+
   if (competition.game_type !== "squad_color" || !competition.squad_composition) {
     // Las competiciones budget_draft tienen su propia pantalla de fichaje
     // (pendiente: motor de presupuesto para las grandes vueltas).

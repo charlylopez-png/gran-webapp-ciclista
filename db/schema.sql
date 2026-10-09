@@ -322,3 +322,50 @@ create table if not exists race_editions (
 create unique index if not exists idx_race_editions_unique
   on race_editions (competition_id, coalesce(event_id, '00000000-0000-0000-0000-000000000000'::uuid), edition_year);
 alter table race_editions enable row level security;
+
+-- ── Grandes vueltas (budget_draft): suplentes, etapas, retiradas ────────
+alter table competitions add column if not exists budget_bench_size int;
+
+alter table competition_events
+  add column if not exists stage_type text,
+  add column if not exists start_place text,
+  add column if not exists finish_place text,
+  add column if not exists distance_km numeric(6, 1),
+  add column if not exists cancelled boolean not null default false,
+  add column if not exists profile_image_path text;
+
+create table if not exists competition_rest_days (
+  id uuid primary key default gen_random_uuid(),
+  competition_id uuid not null references competitions (id) on delete cascade,
+  rest_date date not null,
+  place text,
+  unique (competition_id, rest_date)
+);
+alter table competition_rest_days enable row level security;
+
+alter table team_squad
+  add column if not exists role text not null default 'titular'
+  check (role in ('titular', 'suplente'));
+
+alter table competition_riders
+  add column if not exists withdrawn_event_id uuid references competition_events (id) on delete set null;
+
+create table if not exists team_substitutions (
+  id uuid primary key default gen_random_uuid(),
+  team_id uuid not null references teams (id) on delete cascade,
+  out_rider_id uuid not null references competition_riders (id) on delete cascade,
+  in_rider_id uuid not null references competition_riders (id) on delete cascade,
+  from_event_id uuid not null references competition_events (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (team_id, out_rider_id),
+  unique (team_id, in_rider_id)
+);
+alter table team_substitutions enable row level security;
+
+alter table stage_result_lists
+  add column if not exists competition_rider_id uuid references competition_riders (id) on delete set null,
+  add column if not exists competition_real_team_id uuid references competition_real_teams (id) on delete set null;
+alter table stage_result_lists drop constraint if exists stage_result_lists_list_kind_check;
+alter table stage_result_lists add constraint stage_result_lists_list_kind_check
+  check (list_kind in ('etapa', 'general', 'puntos', 'montana', 'equipos', 'etapa_equipos',
+                       'general_final', 'puntos_final', 'montana_final', 'equipos_final'));

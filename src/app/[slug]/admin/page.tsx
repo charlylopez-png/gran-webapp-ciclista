@@ -10,6 +10,8 @@ import EventHistoryForm from "@/components/admin/event-history-form";
 import { squadLabels } from "@/lib/competitions";
 import CompetitionLockForm from "@/components/admin/competition-lock-form";
 import EventAdminRow from "@/components/admin/event-admin-row";
+import { grandTourConfig } from "@/lib/grand-tour-data";
+import GrandTourAdmin from "./grand-tour-admin";
 
 // Panel de admin de UNA competición: cierre del Equipo Base y, para cada
 // carrera, su fecha/web oficial/cierre de Last Draft/estrellas/
@@ -28,6 +30,8 @@ export default async function CompetitionAdminPage({
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== "admin") notFound();
+
+  if (grandTourConfig(competition)) return <GrandTourAdmin competition={competition} />;
 
   const events =
     competition.game_type === "squad_color" && competition.squad_composition

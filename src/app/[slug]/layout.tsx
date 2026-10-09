@@ -6,6 +6,7 @@ import { getCompetition } from "@/lib/competitions-data";
 import { isPicksLocked, formatEventDate, squadLabels } from "@/lib/competitions";
 import { getCompetitionTheme } from "@/lib/competition-theme";
 import CobbleBackground from "@/components/cobble-background";
+import { grandTourConfig } from "@/lib/grand-tour-data";
 
 // Envoltorio de tema por competición: sustituye a src/app/mundial/layout.tsx
 // (que era a medida solo para el Mundial). Aplica la clase de tema
@@ -32,6 +33,15 @@ export default async function CompetitionLayout({
   // resto de competiciones se quedan con su --hero-pattern normal.
   const showCobble = slug === "clasicas";
   const hasEvents = competition.game_type === "squad_color" && competition.squad_composition;
+  // Gran vuelta ya montada (Giro; Tour y Vuelta cuando se clonen).
+  const isGrandTour = grandTourConfig(competition) !== null;
+  const lockedText = isGrandTour
+    ? "Plantillas cerradas."
+    : `Los fichajes del ${labels.base} están cerrados.`;
+  const lockDate = competition.picks_lock_at ? formatEventDate(competition.picks_lock_at) : "";
+  const openText = isGrandTour
+    ? `Plantillas abiertas hasta ${lockDate}.`
+    : `${labels.base} abierto hasta ${lockDate}.`;
 
   return (
     <div className={theme.scopeClassName}>
@@ -62,9 +72,7 @@ export default async function CompetitionLayout({
                 locked ? "text-rosa" : "text-verde"
               }`}
             >
-              {locked
-                ? `Los fichajes del ${labels.base} están cerrados.`
-                : `${labels.base} abierto hasta ${formatEventDate(competition.picks_lock_at)}.`}
+              {locked ? lockedText : openText}
             </p>
           )}
         </div>
@@ -83,8 +91,18 @@ export default async function CompetitionLayout({
                   <SubNavLink href={`/${slug}/equipos`}>Equipos</SubNavLink>
                 </>
               )}
+              {isGrandTour && (
+                <>
+                  <SubNavLink href={`/${slug}/equipo`}>Mi equipo</SubNavLink>
+                  <SubNavLink href={`/${slug}/etapas`}>Etapas</SubNavLink>
+                </>
+              )}
               <SubNavLink href={`/${slug}/clasificacion`}>Clasificación</SubNavLink>
+              {isGrandTour && <SubNavLink href={`/${slug}/data`}>Data</SubNavLink>}
             </>
+          )}
+          {isGrandTour && (session?.role === "admin" || session?.sanedrin) && (
+            <SubNavLink href={`/${slug}/precios`}>Precios</SubNavLink>
           )}
           {session?.role === "admin" && (
             <SubNavLink href={`/${slug}/admin`}>Admin</SubNavLink>
