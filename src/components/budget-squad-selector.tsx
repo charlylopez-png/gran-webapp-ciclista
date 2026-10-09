@@ -186,13 +186,8 @@ export default function BudgetSquadSelector({
         <FloatingTally
           starters={starters.length}
           squadSize={squadSize}
-          bench={bench.length}
-          benchSize={benchSize}
-          teams={teams.length}
-          realTeamPicks={realTeamPicks}
           spent={spent}
           remaining={remaining}
-          average={average}
           budget={budget}
           dirty={dirty}
           saving={isPending}
@@ -474,7 +469,7 @@ function RiderRow({
     <li className={`flex items-center gap-2.5 py-2 pl-3 pr-2 ${picked ? "bg-[var(--accent)]/10" : ""}`}>
       <FlagIcon iso={rider.nationality} className="text-[15px]" />
       <div className="min-w-0 flex-1">
-        <div className={`truncate text-[15px] leading-tight ${picked ? "font-semibold" : ""}`}>{rider.name}</div>
+        <div className={`break-words text-[15px] leading-snug ${picked ? "font-semibold" : ""}`}>{rider.name}</div>
         {showTeam && rider.team && (
           <div className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-text-soft">
             <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: teamColor(rider.team) }} />
@@ -517,13 +512,8 @@ function RiderRow({
 function FloatingTally({
   starters,
   squadSize,
-  bench,
-  benchSize,
-  teams,
-  realTeamPicks,
   spent,
   remaining,
-  average,
   budget,
   dirty,
   saving,
@@ -531,65 +521,53 @@ function FloatingTally({
 }: {
   starters: number;
   squadSize: number;
-  bench: number;
-  benchSize: number;
-  teams: number;
-  realTeamPicks: number;
   spent: number;
   remaining: number;
-  average: number;
   budget: number;
   dirty: boolean;
   saving: boolean;
   onSave: () => void;
 }) {
+  // Solo lo importante y en grande: corredores elegidos / por elegir y
+  // presupuesto gastado / por gastar. Suplentes y equipos ya se ven arriba.
   const over = remaining < 0;
   const missing = squadSize - starters;
   return (
-    <div className="fixed inset-x-3 bottom-[calc(max(env(safe-area-inset-bottom),10px)+80px)] z-30 mx-auto max-w-md rounded-2xl border border-line bg-surface/95 px-3.5 py-2.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[340px]">
-      <div className="flex items-center gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-display text-lg leading-none text-text">
-              {starters}/{squadSize}
-            </span>
-            <span className="truncate text-xs text-text-soft">
-              {missing > 0 ? `titulares · faltan ${missing}` : "titulares ✓"}
-              {benchSize > 0 && ` · S ${bench}/${benchSize}`}
-              {realTeamPicks > 0 && ` · Eq ${teams}/${realTeamPicks}`}
-            </span>
-          </div>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
-            <div
-              className={`h-full rounded-full transition-all ${over ? "bg-rosa" : "bg-[var(--accent)]"}`}
-              style={{ width: `${Math.min(100, Math.round((spent / budget) * 100))}%` }}
-            />
-          </div>
-          <div className="mt-1 flex items-baseline justify-between gap-2 text-xs tabular-nums">
-            <span className="text-text-soft">
-              Gastado <b className="text-text">{spent}</b>
-            </span>
-            <span className={over ? "font-semibold text-rosa" : "text-text-soft"}>
-              {over ? (
-                `Te pasas ${-remaining}`
-              ) : (
-                <>
-                  Quedan <b className="text-text">{remaining}</b>
-                  {missing > 0 && ` · ${average}/corr.`}
-                </>
-              )}
-            </span>
-          </div>
-        </div>
+    <div className="fixed inset-x-3 bottom-[calc(max(env(safe-area-inset-bottom),10px)+80px)] z-30 mx-auto max-w-md overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_8px_30px_rgba(0,0,0,0.5)] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[360px]">
+      <div className="flex items-stretch">
+        <Stat label="Corredores" value={`${starters}/${squadSize}`} hint={missing > 0 ? `faltan ${missing}` : "completo ✓"} />
+        <span className="my-2 w-px bg-[var(--line)]" aria-hidden="true" />
+        <Stat
+          label="Presupuesto"
+          value={String(spent)}
+          hint={over ? `te pasas ${-remaining}` : `quedan ${remaining}`}
+          alert={over}
+        />
         <button
           type="button"
           onClick={onSave}
           disabled={saving || over || !dirty}
-          className="h-11 shrink-0 rounded-xl bg-[var(--accent)] px-3.5 text-sm font-semibold text-on-accent hover:brightness-110 disabled:opacity-40"
+          className="m-2 shrink-0 rounded-xl bg-[var(--accent)] px-4 text-base font-semibold text-on-accent hover:brightness-110 disabled:opacity-40"
         >
           {saving ? <Spinner /> : dirty ? "Guardar" : "✓"}
         </button>
       </div>
+      <div className="h-1.5 bg-[var(--line)]">
+        <div
+          className={`h-full transition-all ${over ? "bg-rosa" : "bg-[var(--accent)]"}`}
+          style={{ width: `${Math.min(100, Math.round((spent / budget) * 100))}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, hint, alert = false }: { label: string; value: string; hint: string; alert?: boolean }) {
+  return (
+    <div className="min-w-0 flex-1 px-3.5 py-2">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-text-soft">{label}</div>
+      <div className={`font-display text-[28px] leading-none tabular-nums ${alert ? "text-rosa" : "text-text"}`}>{value}</div>
+      <div className={`mt-0.5 text-sm font-semibold tabular-nums ${alert ? "text-rosa" : "text-[var(--accent)]"}`}>{hint}</div>
     </div>
   );
 }
@@ -727,7 +705,7 @@ function PickedList({
             .map((r) => (
               <li key={r.id} className="flex items-center gap-2 py-1.5 text-sm">
                 <FlagIcon iso={r.nationality} />
-                <span className="min-w-0 flex-1 truncate">{r.name}</span>
+                <span className="min-w-0 flex-1 break-words leading-snug">{r.name}</span>
                 <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: teamColor(r.team) }} title={r.team ?? undefined} />
                 <span className="w-9 shrink-0 text-right text-xs tabular-nums text-text-soft">{r.price}</span>
                 <button
