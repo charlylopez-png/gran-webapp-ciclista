@@ -2,7 +2,11 @@
 
 Documento de traspaso: lo que Carlos pidió el 8-oct-2026 para pre-montar el
 Giro. Después se clonará la misma configuración para el Tour y la Vuelta.
-**Aún no hay nada implementado de esto.**
+**Implementado el 9-oct-2026** (commit 7c5127d): motor en `src/lib/grand-tour.ts`,
+datos en `src/lib/grand-tour-data.ts`, admin en `/giro/admin` y `/giro/precios`.
+Pendiente: cargar corredores, precios y recorrido del Giro 2027, y clonar a Tour y Vuelta
+(basta con poner `budget_cap`, `budget_squad_size`, `budget_bench_size` y
+`real_team_pick_size` en su fila de `competitions`).
 
 Referencia de cómo funcionaba la app anterior (Vuelta, mismo sistema que el
 Giro): https://charlylopez-png.github.io/vuelta-txirridulariak/ — sacar de
