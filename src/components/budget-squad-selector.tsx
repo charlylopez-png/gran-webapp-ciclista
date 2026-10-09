@@ -181,8 +181,27 @@ export default function BudgetSquadSelector({
 
   return (
     <div>
-      {/* Marcador de presupuesto: siempre a la vista mientras se ficha. */}
-      <div className="sticky top-0 z-10 -mx-4 rounded-b-2xl border-b border-line bg-surface px-4 pb-3 pt-2 shadow-sm">
+      {/* Ventanita flotante con las cuentas en cuanto se empieza a elegir. */}
+      {(starters.length > 0 || bench.length > 0 || teams.length > 0 || dirty) && (
+        <FloatingTally
+          starters={starters.length}
+          squadSize={squadSize}
+          bench={bench.length}
+          benchSize={benchSize}
+          teams={teams.length}
+          realTeamPicks={realTeamPicks}
+          spent={spent}
+          remaining={remaining}
+          average={average}
+          budget={budget}
+          dirty={dirty}
+          saving={isPending}
+          onSave={save}
+        />
+      )}
+
+      {/* Marcador de presupuesto. */}
+      <div className="rounded-2xl border border-line bg-surface px-4 pb-3 pt-2">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="font-display text-lg text-verde-deep">
             {spent.toLocaleString("es-ES")}
@@ -417,6 +436,8 @@ export default function BudgetSquadSelector({
           )}
         </div>
       </section>
+      {/* Hueco para que la ventanita flotante no tape el último corredor. */}
+      <div className="h-24" aria-hidden="true" />
     </div>
   );
 }
@@ -446,57 +467,168 @@ function RiderRow({
 }) {
   const tone = priceTone(rider.price);
   const picked = isStarter || isBench;
+  // T = titular, S = suplente: dos botones redondos pequeños para que el
+  // nombre (y la bandera) tengan sitio en el móvil. Elegido, el suyo se
+  // rellena y otro toque lo quita.
   return (
-    <li className={`flex items-center gap-3 px-3.5 py-2.5 ${picked ? "bg-[var(--accent)]/10" : ""}`}>
-      <FlagIcon iso={rider.nationality} className="text-base" />
+    <li className={`flex items-center gap-2.5 py-2 pl-3 pr-2 ${picked ? "bg-[var(--accent)]/10" : ""}`}>
+      <FlagIcon iso={rider.nationality} className="text-[15px]" />
       <div className="min-w-0 flex-1">
-        <div className={`truncate text-[15px] ${picked ? "font-semibold" : ""}`}>{rider.name}</div>
+        <div className={`truncate text-[15px] leading-tight ${picked ? "font-semibold" : ""}`}>{rider.name}</div>
         {showTeam && rider.team && (
-          <div className="flex items-center gap-1.5 truncate text-xs text-text-soft">
+          <div className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-text-soft">
             <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: teamColor(rider.team) }} />
             {rider.team}
           </div>
         )}
       </div>
       <span
-        className="shrink-0 rounded-lg px-2 py-0.5 font-display text-sm tabular-nums"
+        className="shrink-0 rounded-lg px-1.5 py-0.5 font-display text-sm tabular-nums"
         style={{ background: tone.bg, color: tone.fg }}
       >
         {rider.price}
       </span>
-      {picked ? (
-        <button
-          type="button"
-          onClick={() => onRemove(rider.id)}
-          className="flex h-9 shrink-0 items-center rounded-full bg-[var(--accent)] px-3 text-xs font-semibold text-on-accent"
-          aria-label={`Quitar a ${rider.name}`}
-        >
-          {isStarter ? "Titular" : "Suplente"} ✕
-        </button>
-      ) : (
-        <div className="flex shrink-0 gap-1">
-          <button
-            type="button"
-            onClick={() => onAdd(rider, "starter")}
-            disabled={startersFull || tooExpensive}
-            title={tooExpensive ? "No te llega el presupuesto" : startersFull ? "Ya tienes todos los titulares" : undefined}
-            className="flex h-9 items-center rounded-full border border-[var(--accent)] px-3 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)] hover:text-on-accent disabled:border-line disabled:text-text-soft disabled:opacity-40 disabled:hover:bg-transparent"
-          >
-            + Titular
-          </button>
-          {benchEnabled && (
-            <button
-              type="button"
-              onClick={() => onAdd(rider, "bench")}
-              disabled={benchFull}
-              className="flex h-9 items-center rounded-full border border-line px-3 text-xs text-text-soft hover:border-[var(--accent)] hover:text-text disabled:opacity-30"
-            >
-              Supl.
-            </button>
-          )}
-        </div>
+      <SlotButton
+        letter="T"
+        label={isStarter ? `Quitar a ${rider.name} de titulares` : `${rider.name} titular`}
+        on={isStarter}
+        disabled={!isStarter && (startersFull || tooExpensive)}
+        title={!isStarter && tooExpensive ? "No te llega el presupuesto" : !isStarter && startersFull ? "Ya tienes los titulares" : "Titular"}
+        onClick={() => (isStarter ? onRemove(rider.id) : onAdd(rider, "starter"))}
+      />
+      {benchEnabled && (
+        <SlotButton
+          letter="S"
+          label={isBench ? `Quitar a ${rider.name} de suplentes` : `${rider.name} suplente`}
+          on={isBench}
+          disabled={!isBench && benchFull}
+          title={!isBench && benchFull ? "Ya tienes los suplentes" : "Suplente"}
+          onClick={() => (isBench ? onRemove(rider.id) : onAdd(rider, "bench"))}
+          secondary
+        />
       )}
     </li>
+  );
+}
+
+// Tarjeta flotante con las cuentas de la plantilla: en el móvil, justo
+// encima de la barra de pestañas (y de la rayita del iPhone); en el
+// ordenador, abajo a la derecha. Lleva también el botón de guardar.
+function FloatingTally({
+  starters,
+  squadSize,
+  bench,
+  benchSize,
+  teams,
+  realTeamPicks,
+  spent,
+  remaining,
+  average,
+  budget,
+  dirty,
+  saving,
+  onSave,
+}: {
+  starters: number;
+  squadSize: number;
+  bench: number;
+  benchSize: number;
+  teams: number;
+  realTeamPicks: number;
+  spent: number;
+  remaining: number;
+  average: number;
+  budget: number;
+  dirty: boolean;
+  saving: boolean;
+  onSave: () => void;
+}) {
+  const over = remaining < 0;
+  const missing = squadSize - starters;
+  return (
+    <div className="fixed inset-x-3 bottom-[calc(max(env(safe-area-inset-bottom),10px)+80px)] z-30 mx-auto max-w-md rounded-2xl border border-line bg-surface/95 px-3.5 py-2.5 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[340px]">
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-display text-lg leading-none text-text">
+              {starters}/{squadSize}
+            </span>
+            <span className="truncate text-xs text-text-soft">
+              {missing > 0 ? `titulares · faltan ${missing}` : "titulares ✓"}
+              {benchSize > 0 && ` · S ${bench}/${benchSize}`}
+              {realTeamPicks > 0 && ` · Eq ${teams}/${realTeamPicks}`}
+            </span>
+          </div>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
+            <div
+              className={`h-full rounded-full transition-all ${over ? "bg-rosa" : "bg-[var(--accent)]"}`}
+              style={{ width: `${Math.min(100, Math.round((spent / budget) * 100))}%` }}
+            />
+          </div>
+          <div className="mt-1 flex items-baseline justify-between gap-2 text-xs tabular-nums">
+            <span className="text-text-soft">
+              Gastado <b className="text-text">{spent}</b>
+            </span>
+            <span className={over ? "font-semibold text-rosa" : "text-text-soft"}>
+              {over ? (
+                `Te pasas ${-remaining}`
+              ) : (
+                <>
+                  Quedan <b className="text-text">{remaining}</b>
+                  {missing > 0 && ` · ${average}/corr.`}
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving || over || !dirty}
+          className="h-11 shrink-0 rounded-xl bg-[var(--accent)] px-3.5 text-sm font-semibold text-on-accent hover:brightness-110 disabled:opacity-40"
+        >
+          {saving ? <Spinner /> : dirty ? "Guardar" : "✓"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SlotButton({
+  letter,
+  label,
+  title,
+  on,
+  disabled,
+  onClick,
+  secondary = false,
+}: {
+  letter: string;
+  label: string;
+  title: string;
+  on: boolean;
+  disabled: boolean;
+  onClick: () => void;
+  secondary?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      aria-pressed={on}
+      title={title}
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 font-display text-sm transition ${
+        on
+          ? "border-[var(--accent)] bg-[var(--accent)] text-on-accent"
+          : secondary
+          ? "border-line text-text-soft hover:border-[var(--accent)] hover:text-text"
+          : "border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-on-accent"
+      } disabled:border-line disabled:bg-transparent disabled:text-text-soft disabled:opacity-30`}
+    >
+      {letter}
+    </button>
   );
 }
 
