@@ -38,6 +38,7 @@ export type GtRider = {
   id: string; // competition_riders.id
   name: string;
   team: string | null;
+  nationality: string | null; // ISO de 2 letras, para la bandera
   price: number;
   active: boolean;
   withdrawnEventId: string | null;
@@ -75,15 +76,16 @@ function isoDate(value: string | Date | null): string | null {
 
 export async function getGrandTourRiders(competitionId: string): Promise<GtRider[]> {
   const rows = (await sql`
-    select cr.id, r.name, r.team, cr.point_cost, cr.active, cr.withdrawn_event_id
+    select cr.id, r.name, coalesce(cr.team, r.team) as team, r.nationality, cr.point_cost, cr.active, cr.withdrawn_event_id
     from competition_riders cr
     join riders r on r.id = cr.rider_id
     where cr.competition_id = ${competitionId}
-    order by r.team nulls last, r.name
+    order by coalesce(cr.team, r.team) nulls last, r.name
   `) as {
     id: string;
     name: string;
     team: string | null;
+    nationality: string | null;
     point_cost: string | number | null;
     active: boolean;
     withdrawn_event_id: string | null;
@@ -92,6 +94,7 @@ export async function getGrandTourRiders(competitionId: string): Promise<GtRider
     id: r.id,
     name: r.name,
     team: r.team,
+    nationality: r.nationality,
     price: Number(r.point_cost ?? 0),
     active: r.active,
     withdrawnEventId: r.withdrawn_event_id,
@@ -241,7 +244,13 @@ export function buildRosterLookup(data: GtData) {
     riders: new Map(
       data.riders.map((r) => [
         r.id,
-        { name: r.name, team: r.team, price: r.price, withdrawn: Boolean(r.withdrawnEventId) },
+        {
+          name: r.name,
+          team: r.team,
+          nationality: r.nationality,
+          price: r.price,
+          withdrawn: Boolean(r.withdrawnEventId),
+        },
       ])
     ),
     teams: new Map(data.realTeams.map((t) => [t.id, t.name])),

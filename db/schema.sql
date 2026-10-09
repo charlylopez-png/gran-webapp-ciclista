@@ -369,3 +369,8 @@ alter table stage_result_lists drop constraint if exists stage_result_lists_list
 alter table stage_result_lists add constraint stage_result_lists_list_kind_check
   check (list_kind in ('etapa', 'general', 'puntos', 'montana', 'equipos', 'etapa_equipos',
                        'general_final', 'puntos_final', 'montana_final', 'equipos_final'));
+
+-- Nacionalidad del corredor (ISO de 2 letras) y su equipo en cada competición.
+alter table riders add column if not exists nationality text
+  check (nationality is null or nationality ~ '^[a-z]{2}$');
+alter table competition_riders add column if not exists team text;

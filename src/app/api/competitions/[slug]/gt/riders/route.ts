@@ -17,6 +17,13 @@ const BodySchema = z.object({
         name: z.string().trim().min(1).max(120),
         team: z.string().trim().min(1).max(120),
         price: z.number().int().min(0).max(5000).nullable(),
+        nationality: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .regex(/^[a-z]{2}$/)
+          .nullable()
+          .optional(),
       })
     )
     .min(1)
@@ -40,7 +47,7 @@ export async function POST(
   const parsed = BodySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Lista no válida: una línea por corredor, «Nombre; Equipo; Precio»." },
+      { error: "Lista no válida: una línea por corredor, «Nombre; Equipo; Precio; País»." },
       { status: 400 }
     );
   }
@@ -54,18 +61,24 @@ export async function POST(
       `) as { id: string }[];
       let riderId = existing?.id;
       if (riderId) {
-        await tx`update riders set team = ${row.team} where id = ${riderId}`;
+        await tx`
+          update riders set nationality = coalesce(${row.nationality ?? null}, nationality)
+          where id = ${riderId}
+        `;
       } else {
         const [inserted] = (await tx`
-          insert into riders (name, team) values (${row.name}, ${row.team}) returning id
+          insert into riders (name, team, nationality)
+          values (${row.name}, ${row.team}, ${row.nationality ?? null}) returning id
         `) as { id: string }[];
         riderId = inserted.id;
       }
       const [link] = (await tx`
-        insert into competition_riders (competition_id, rider_id, point_cost, active)
-        values (${competition.id}, ${riderId}, ${row.price}, true)
+        insert into competition_riders (competition_id, rider_id, team, point_cost, active)
+        values (${competition.id}, ${riderId}, ${row.team}, ${row.price}, true)
         on conflict (competition_id, rider_id) do update
-          set point_cost = coalesce(excluded.point_cost, competition_riders.point_cost), active = true
+          set team = excluded.team,
+              point_cost = coalesce(excluded.point_cost, competition_riders.point_cost),
+              active = true
         returning (xmax = 0) as inserted
       `) as { inserted: boolean }[];
       if (link.inserted) created++;
@@ -79,4 +92,28 @@ export async function POST(
   });
 
   return NextResponse.json({ ok: true, created, updated });
+}
+
+// Vacía la lista de salida (corredores y equipos de esta competición) para
+// cargar otra desde cero — p.ej. quitar la muestra cuando llegue la lista
+// real. Se lleva por delante las plantillas que los usaran, así que la
+// pantalla pide confirmación.
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") {
+    return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  }
+  const { slug } = await params;
+  const competition = await getCompetition(slug);
+  if (!competition || !grandTourConfig(competition)) {
+    return NextResponse.json({ error: "Esa competición no existe." }, { status: 404 });
+  }
+  await transaction(async (tx) => {
+    await tx`delete from competition_riders where competition_id = ${competition.id}`;
+    await tx`delete from competition_real_teams where competition_id = ${competition.id}`;
+  });
+  return NextResponse.json({ ok: true });
 }

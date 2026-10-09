@@ -1,11 +1,15 @@
 import type { Contribution, GtRoster } from "@/lib/grand-tour";
+import { FlagIcon } from "@/components/country-flag";
 
 // Plantilla de un participante de una gran vuelta con lo que ha aportado
 // cada corredor/equipo: titulares (con su suplente si entró), suplentes y
 // equipos ciclistas. Sin estado: sirve en Inicio, Mi equipo y en el
 // desplegable de la Clasificación.
 export type RosterLookup = {
-  riders: Map<string, { name: string; team: string | null; price: number; withdrawn: boolean }>;
+  riders: Map<
+    string,
+    { name: string; team: string | null; nationality: string | null; price: number; withdrawn: boolean }
+  >;
   teams: Map<string, string>;
   stageOrderById: Map<string, number>;
 };
@@ -50,7 +54,8 @@ export default function TeamRoster({
               <li key={id} className="py-1.5 text-sm">
                 <div className="flex items-center gap-2">
                   <span className={`min-w-0 flex-1 truncate ${sub ? "text-text-soft line-through" : ""}`}>
-                    🚴 {r?.name ?? "—"}
+                    <FlagIcon iso={r?.nationality} className="mr-1.5" />
+                    {r?.name ?? "—"}
                     {r?.withdrawn && !sub && <span className="ml-1 text-xs text-rosa">(retirado)</span>}
                   </span>
                   <span className="shrink-0 text-xs text-text-soft">{r?.price}</span>
@@ -59,7 +64,8 @@ export default function TeamRoster({
                 {sub && inRider && (
                   <div className="flex items-center gap-2 pl-5 text-sm">
                     <span className="min-w-0 flex-1 truncate">
-                      ↳ {inRider.name}{" "}
+                      ↳ <FlagIcon iso={inRider.nationality} className="mx-1" />
+                      {inRider.name}{" "}
                       <span className="text-xs text-text-soft">
                         (suplente desde la etapa {sub.fromOrder})
                       </span>
@@ -86,7 +92,8 @@ export default function TeamRoster({
                 const r = lookup.riders.get(id);
                 return (
                   <li key={id} className="flex items-center gap-2 py-1.5 text-sm text-text-soft">
-                    <span className="min-w-0 flex-1 truncate">🪑 {r?.name ?? "—"}</span>
+                    <span className="min-w-0 flex-1 truncate">🪑 <FlagIcon iso={r?.nationality} className="mr-1" />
+                      {r?.name ?? "—"}</span>
                     <span className="shrink-0 text-xs">{r?.price}</span>
                     <span className="w-12 shrink-0 text-right">—</span>
                   </li>

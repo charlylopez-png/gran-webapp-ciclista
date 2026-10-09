@@ -3,21 +3,27 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import Spinner from "@/components/spinner";
+import { FlagIcon } from "@/components/country-flag";
+import { priceTone, teamColor } from "@/lib/cycling-teams";
 
 // Selector de plantilla de una gran vuelta: titulares dentro del
 // presupuesto, suplentes fuera de él y equipos ciclistas sin coste. Va
 // haciendo las cuentas en vivo (gastado, restante, cuántos faltan y media
-// por hueco) para que se vea al momento si la plantilla cabe.
+// por hueco) para que se vea al momento si la plantilla cabe. Los
+// corredores se ven por equipos (con el color de su maillot) o por precio,
+// con bandera y filtros de precio.
 export type BudgetRider = {
   id: string;
   name: string;
   team: string | null;
+  nationality: string | null;
   price: number;
 };
 
 export type BudgetRealTeam = { id: string; name: string };
 
 type Slot = "starter" | "bench";
+type View = "teams" | "price";
 
 export default function BudgetSquadSelector({
   riders,
@@ -48,8 +54,10 @@ export default function BudgetSquadSelector({
   const [teams, setTeams] = useState<string[]>(initialRealTeams);
   const [query, setQuery] = useState("");
   const [teamFilter, setTeamFilter] = useState("");
-  const [priceFilter, setPriceFilter] = useState<number | null>(null);
-  const [sort, setSort] = useState<"price" | "name" | "team">("price");
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [onlyAffordable, setOnlyAffordable] = useState(false);
+  const [view, setView] = useState<View>("teams");
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
@@ -77,18 +85,35 @@ export default function BudgetSquadSelector({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = riders.filter((r) => {
+    return riders.filter((r) => {
       if (teamFilter && r.team !== teamFilter) return false;
-      if (priceFilter !== null && r.price !== priceFilter) return false;
+      if (minPrice !== null && r.price < minPrice) return false;
+      if (maxPrice !== null && r.price > maxPrice) return false;
+      if (onlyAffordable && !starters.includes(r.id) && r.price > remaining) return false;
       if (!q) return true;
       return r.name.toLowerCase().includes(q) || (r.team ?? "").toLowerCase().includes(q);
     });
-    return list.sort((a, b) => {
-      if (sort === "price") return b.price - a.price || a.name.localeCompare(b.name);
-      if (sort === "team") return (a.team ?? "").localeCompare(b.team ?? "") || a.name.localeCompare(b.name);
-      return a.name.localeCompare(b.name);
-    });
-  }, [riders, query, teamFilter, priceFilter, sort]);
+  }, [riders, query, teamFilter, minPrice, maxPrice, onlyAffordable, starters, remaining]);
+
+  // Bloques a pintar: por equipo (ordenados por nombre, corredores de más a
+  // menos caro) o por escalón de precio (de más caro a más barato).
+  const groups = useMemo(() => {
+    const map = new Map<string, BudgetRider[]>();
+    for (const r of filtered) {
+      const key = view === "teams" ? r.team ?? "Sin equipo" : String(r.price);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(r);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => b.price - a.price || a.name.localeCompare(b.name));
+    }
+    return Array.from(map.entries()).sort((a, b) =>
+      view === "teams" ? a[0].localeCompare(b[0]) : Number(b[0]) - Number(a[0])
+    );
+  }, [filtered, view]);
+
+  const activeFilters =
+    (teamFilter ? 1 : 0) + (minPrice !== null ? 1 : 0) + (maxPrice !== null ? 1 : 0) + (onlyAffordable ? 1 : 0);
 
   function add(rider: BudgetRider, slot: Slot) {
     setFeedback(null);
@@ -110,6 +135,25 @@ export default function BudgetSquadSelector({
   function toggleTeam(id: string) {
     setFeedback(null);
     setTeams((t) => (t.includes(id) ? t.filter((x) => x !== id) : t.length < realTeamPicks ? [...t, id] : t));
+  }
+
+  function quickPrice(p: number) {
+    // Un toque = solo ese escalón; otro toque en el mismo = quitar filtro.
+    if (minPrice === p && maxPrice === p) {
+      setMinPrice(null);
+      setMaxPrice(null);
+    } else {
+      setMinPrice(p);
+      setMaxPrice(p);
+    }
+  }
+
+  function clearFilters() {
+    setTeamFilter("");
+    setMinPrice(null);
+    setMaxPrice(null);
+    setOnlyAffordable(false);
+    setQuery("");
   }
 
   function save() {
@@ -138,25 +182,26 @@ export default function BudgetSquadSelector({
   return (
     <div>
       {/* Marcador de presupuesto: siempre a la vista mientras se ficha. */}
-      <div className="sticky top-0 z-10 -mx-4 rounded-b-2xl bg-surface px-4 pb-3 pt-2 shadow-sm">
+      <div className="sticky top-0 z-10 -mx-4 rounded-b-2xl border-b border-line bg-surface px-4 pb-3 pt-2 shadow-sm">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <div className="font-display text-sm uppercase tracking-wide text-verde-deep">
-            {spent.toLocaleString("es-ES")} / {budget.toLocaleString("es-ES")} pts
+          <div className="font-display text-lg text-verde-deep">
+            {spent.toLocaleString("es-ES")}
+            <span className="text-sm text-text-soft"> / {budget.toLocaleString("es-ES")} pts</span>
           </div>
           <div className={`text-sm font-semibold ${remaining < 0 ? "text-rosa" : "text-text"}`}>
             {remaining < 0 ? `Te pasas ${-remaining}` : `Quedan ${remaining}`}
             {missing > 0 && remaining >= 0 && (
-              <span className="font-normal text-text-soft"> · {average} de media por corredor</span>
+              <span className="font-normal text-text-soft"> · {average} de media</span>
             )}
           </div>
         </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--line)]">
+        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--line)]">
           <div
-            className={`h-full rounded-full ${remaining < 0 ? "bg-rosa" : "bg-[var(--accent)]"}`}
+            className={`h-full rounded-full transition-all ${remaining < 0 ? "bg-rosa" : "bg-[var(--accent)]"}`}
             style={{ width: `${pct}%` }}
           />
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
           <Counter label="Titulares" value={starters.length} max={squadSize} />
           {benchSize > 0 && <Counter label="Suplentes" value={bench.length} max={benchSize} />}
           {realTeamPicks > 0 && <Counter label="Equipos" value={teams.length} max={realTeamPicks} />}
@@ -164,7 +209,7 @@ export default function BudgetSquadSelector({
             type="button"
             onClick={save}
             disabled={isPending || remaining < 0 || !dirty}
-            className="ml-auto rounded-full bg-[var(--accent)] px-4 py-2 font-display text-xs uppercase tracking-wide text-on-accent hover:brightness-110 disabled:opacity-40"
+            className="ml-auto rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-on-accent hover:brightness-110 disabled:opacity-40"
           >
             {isPending ? (
               <>
@@ -172,9 +217,9 @@ export default function BudgetSquadSelector({
                 Guardando…
               </>
             ) : dirty ? (
-              "Guardar plantilla"
+              "Guardar"
             ) : (
-              "Guardada"
+              "Guardada ✓"
             )}
           </button>
         </div>
@@ -188,7 +233,7 @@ export default function BudgetSquadSelector({
       {/* Lo elegido hasta ahora. */}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <PickedList
-          title={`Titulares (${starters.length}/${squadSize})`}
+          title={`Titulares ${starters.length}/${squadSize}`}
           ids={starters}
           ridersById={ridersById}
           onRemove={remove}
@@ -196,7 +241,7 @@ export default function BudgetSquadSelector({
         />
         {benchSize > 0 && (
           <PickedList
-            title={`Suplentes (${bench.length}/${benchSize}) · fuera del presupuesto`}
+            title={`Suplentes ${bench.length}/${benchSize} · fuera del presupuesto`}
             ids={bench}
             ridersById={ridersById}
             onRemove={remove}
@@ -208,7 +253,7 @@ export default function BudgetSquadSelector({
       {realTeamPicks > 0 && (
         <section className="mt-6">
           <h3 className="font-display text-sm uppercase tracking-wide text-verde-deep">
-            Equipos ciclistas ({teams.length}/{realTeamPicks}) · sin coste
+            Equipos ciclistas {teams.length}/{realTeamPicks} · sin coste
           </h3>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {realTeams.map((t) => {
@@ -220,16 +265,17 @@ export default function BudgetSquadSelector({
                   type="button"
                   onClick={() => toggleTeam(t.id)}
                   disabled={full}
-                  className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                  className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm transition ${
                     on
-                      ? "border-verde-deep bg-verde-deep text-on-accent"
+                      ? "border-[var(--accent)] bg-[var(--accent)] font-semibold text-on-accent"
                       : full
                       ? "border-line opacity-40"
-                      : "border-line bg-surface hover:border-verde-deep/50"
+                      : "border-line bg-surface hover:border-[var(--accent)]"
                   }`}
                 >
-                  {on ? "✓ " : ""}
+                  <span className="h-3 w-3 shrink-0 rounded-full ring-1 ring-white/30" style={{ background: teamColor(t.name) }} />
                   {t.name}
+                  {on && " ✓"}
                 </button>
               );
             })}
@@ -245,21 +291,35 @@ export default function BudgetSquadSelector({
         </section>
       )}
 
-      {/* Buscador y lista de corredores. */}
+      {/* Buscador, filtros y lista de corredores. */}
       <section className="mt-8">
-        <h3 className="font-display text-sm uppercase tracking-wide text-verde-deep">Corredores</h3>
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar corredor o equipo…"
-            className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-base outline-none focus:border-verde"
-          />
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-display text-sm uppercase tracking-wide text-verde-deep">
+            Corredores <span className="text-text-soft">({filtered.length})</span>
+          </h3>
+          <div className="flex rounded-full border border-line bg-surface p-0.5 text-xs font-semibold">
+            <ViewButton active={view === "teams"} onClick={() => setView("teams")}>
+              Por equipos
+            </ViewButton>
+            <ViewButton active={view === "price"} onClick={() => setView("price")}>
+              Por precio
+            </ViewButton>
+          </div>
+        </div>
+
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar corredor o equipo…"
+          className="mt-3 w-full rounded-2xl border border-line bg-surface px-4 py-3 text-base outline-none focus:border-[var(--accent)]"
+        />
+
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <select
             value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value)}
-            className="rounded-full border border-line bg-surface px-4 py-2.5 text-base outline-none focus:border-verde"
+            className="col-span-2 rounded-2xl border border-line bg-surface px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)] sm:col-span-2"
           >
             <option value="">Todos los equipos</option>
             {cyclingTeams.map((t) => (
@@ -268,93 +328,226 @@ export default function BudgetSquadSelector({
               </option>
             ))}
           </select>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as typeof sort)}
-            className="rounded-full border border-line bg-surface px-4 py-2.5 text-base outline-none focus:border-verde"
-          >
-            <option value="price">Más caros primero</option>
-            <option value="name">Por nombre</option>
-            <option value="team">Por equipo</option>
-          </select>
-        </div>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-text-soft">Precio:</span>
-          <Chip on={priceFilter === null} onClick={() => setPriceFilter(null)}>
-            Todos
-          </Chip>
-          {prices.map((p) => (
-            <Chip key={p} on={priceFilter === p} onClick={() => setPriceFilter(priceFilter === p ? null : p)}>
-              {p}
-            </Chip>
-          ))}
+          <PriceSelect label="Desde" value={minPrice} prices={prices} onChange={setMinPrice} />
+          <PriceSelect label="Hasta" value={maxPrice} prices={prices} onChange={setMaxPrice} />
         </div>
 
-        <div className="mt-3 flex flex-col gap-1.5">
-          {filtered.map((rider) => {
-            const isStarter = starters.includes(rider.id);
-            const isBench = bench.includes(rider.id);
-            const startersFull = !isStarter && starters.length >= squadSize;
-            const tooExpensive = !isStarter && rider.price > remaining;
-            const benchFull = !isBench && bench.length >= benchSize;
+        <div className="-mx-1 mt-2 flex gap-1.5 overflow-x-auto px-1 pb-1">
+          {prices.map((p) => {
+            const tone = priceTone(p);
+            const on = minPrice === p && maxPrice === p;
             return (
-              <div
-                key={rider.id}
-                className={`flex items-center gap-3 rounded-xl border px-3.5 py-2 ${
-                  isStarter || isBench ? "border-verde-deep bg-verde-deep/10" : "border-line bg-surface"
+              <button
+                key={p}
+                type="button"
+                onClick={() => quickPrice(p)}
+                className={`shrink-0 rounded-full px-3 py-1.5 font-display text-sm transition ${
+                  on ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]" : "opacity-80 hover:opacity-100"
                 }`}
+                style={{ background: tone.bg, color: tone.fg }}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-base">{rider.name}</div>
-                  <div className="truncate text-xs text-text-soft">{rider.team ?? "Sin equipo"}</div>
-                </div>
-                <span className="shrink-0 rounded-full bg-[var(--pill-bg)] px-2.5 py-1 font-display text-xs text-[var(--pill-text)]">
-                  {rider.price}
-                </span>
-                {isStarter || isBench ? (
-                  <button
-                    type="button"
-                    onClick={() => remove(rider.id)}
-                    className="shrink-0 rounded-full border border-line px-3 py-1.5 text-xs text-text-soft hover:border-rosa hover:text-rosa"
-                  >
-                    {isStarter ? "Titular ✕" : "Suplente ✕"}
-                  </button>
-                ) : (
-                  <div className="flex shrink-0 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => add(rider, "starter")}
-                      disabled={startersFull || tooExpensive}
-                      title={tooExpensive ? "No te llega el presupuesto" : undefined}
-                      className="rounded-full bg-[var(--accent)] px-3 py-1.5 text-xs text-on-accent hover:brightness-110 disabled:opacity-30"
-                    >
-                      + Titular
-                    </button>
-                    {benchSize > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => add(rider, "bench")}
-                        disabled={benchFull}
-                        className="rounded-full border border-line px-3 py-1.5 text-xs hover:border-verde-deep/50 disabled:opacity-30"
-                      >
-                        + Suplente
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+                {p}
+              </button>
             );
           })}
-          {filtered.length === 0 && (
-            <p className="text-sm text-text-soft">
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <label className="flex items-center gap-2 text-sm text-text-soft">
+            <input
+              type="checkbox"
+              checked={onlyAffordable}
+              onChange={(e) => setOnlyAffordable(e.target.checked)}
+              className="h-4 w-4 accent-[var(--accent)]"
+            />
+            Solo los que me caben ({Math.max(remaining, 0)})
+          </label>
+          {(activeFilters > 0 || query) && (
+            <button type="button" onClick={clearFilters} className="text-sm text-[var(--accent)] underline-offset-2 hover:underline">
+              Quitar filtros
+            </button>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-col gap-4">
+          {groups.map(([key, list]) => {
+            const chosen = list.filter((r) => starters.includes(r.id) || bench.includes(r.id)).length;
+            const color = view === "teams" ? teamColor(key) : priceTone(Number(key)).bg;
+            return (
+              <section
+                key={key}
+                className="overflow-hidden rounded-2xl border border-line bg-surface"
+                style={{ borderLeft: `5px solid ${color}` }}
+              >
+                <header className="flex items-center justify-between gap-2 border-b border-line px-3.5 py-2.5">
+                  <h4 className="min-w-0 truncate font-display text-sm uppercase tracking-wide text-text">
+                    {view === "teams" ? key : `${key} puntos`}
+                  </h4>
+                  <span className="shrink-0 text-xs text-text-soft">
+                    {chosen > 0 && <span className="mr-2 font-semibold text-[var(--accent)]">{chosen} elegidos</span>}
+                    {list.length}
+                  </span>
+                </header>
+                <ul className="divide-y divide-line">
+                  {list.map((rider) => (
+                    <RiderRow
+                      key={rider.id}
+                      rider={rider}
+                      showTeam={view === "price"}
+                      isStarter={starters.includes(rider.id)}
+                      isBench={bench.includes(rider.id)}
+                      startersFull={starters.length >= squadSize}
+                      benchFull={bench.length >= benchSize}
+                      benchEnabled={benchSize > 0}
+                      tooExpensive={rider.price > remaining}
+                      onAdd={add}
+                      onRemove={remove}
+                    />
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+          {groups.length === 0 && (
+            <p className="rounded-2xl border border-dashed border-line bg-surface p-6 text-center text-sm text-text-soft">
               {riders.length === 0
                 ? "Todavía no están cargados los corredores ni sus precios."
-                : "No hay corredores que coincidan."}
+                : "No hay corredores que coincidan con los filtros."}
             </p>
           )}
         </div>
       </section>
     </div>
+  );
+}
+
+function RiderRow({
+  rider,
+  showTeam,
+  isStarter,
+  isBench,
+  startersFull,
+  benchFull,
+  benchEnabled,
+  tooExpensive,
+  onAdd,
+  onRemove,
+}: {
+  rider: BudgetRider;
+  showTeam: boolean;
+  isStarter: boolean;
+  isBench: boolean;
+  startersFull: boolean;
+  benchFull: boolean;
+  benchEnabled: boolean;
+  tooExpensive: boolean;
+  onAdd: (r: BudgetRider, slot: Slot) => void;
+  onRemove: (id: string) => void;
+}) {
+  const tone = priceTone(rider.price);
+  const picked = isStarter || isBench;
+  return (
+    <li className={`flex items-center gap-3 px-3.5 py-2.5 ${picked ? "bg-[var(--accent)]/10" : ""}`}>
+      <FlagIcon iso={rider.nationality} className="text-base" />
+      <div className="min-w-0 flex-1">
+        <div className={`truncate text-[15px] ${picked ? "font-semibold" : ""}`}>{rider.name}</div>
+        {showTeam && rider.team && (
+          <div className="flex items-center gap-1.5 truncate text-xs text-text-soft">
+            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: teamColor(rider.team) }} />
+            {rider.team}
+          </div>
+        )}
+      </div>
+      <span
+        className="shrink-0 rounded-lg px-2 py-0.5 font-display text-sm tabular-nums"
+        style={{ background: tone.bg, color: tone.fg }}
+      >
+        {rider.price}
+      </span>
+      {picked ? (
+        <button
+          type="button"
+          onClick={() => onRemove(rider.id)}
+          className="flex h-9 shrink-0 items-center rounded-full bg-[var(--accent)] px-3 text-xs font-semibold text-on-accent"
+          aria-label={`Quitar a ${rider.name}`}
+        >
+          {isStarter ? "Titular" : "Suplente"} ✕
+        </button>
+      ) : (
+        <div className="flex shrink-0 gap-1">
+          <button
+            type="button"
+            onClick={() => onAdd(rider, "starter")}
+            disabled={startersFull || tooExpensive}
+            title={tooExpensive ? "No te llega el presupuesto" : startersFull ? "Ya tienes todos los titulares" : undefined}
+            className="flex h-9 items-center rounded-full border border-[var(--accent)] px-3 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent)] hover:text-on-accent disabled:border-line disabled:text-text-soft disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            + Titular
+          </button>
+          {benchEnabled && (
+            <button
+              type="button"
+              onClick={() => onAdd(rider, "bench")}
+              disabled={benchFull}
+              className="flex h-9 items-center rounded-full border border-line px-3 text-xs text-text-soft hover:border-[var(--accent)] hover:text-text disabled:opacity-30"
+            >
+              Supl.
+            </button>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
+function PriceSelect({
+  label,
+  value,
+  prices,
+  onChange,
+}: {
+  label: string;
+  value: number | null;
+  prices: number[];
+  onChange: (v: number | null) => void;
+}) {
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
+      aria-label={`Precio ${label.toLowerCase()}`}
+      className="rounded-2xl border border-line bg-surface px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
+    >
+      <option value="">{label}: cualquiera</option>
+      {[...prices].sort((a, b) => a - b).map((p) => (
+        <option key={p} value={p}>
+          {label} {p}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function ViewButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-full px-3 py-1.5 transition ${
+        active ? "bg-[var(--accent)] text-on-accent" : "text-text-soft hover:text-text"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -366,34 +559,12 @@ function Counter({ label, value, max }: { label: string; value: number; max: num
   const done = value === max;
   return (
     <span
-      className={`rounded-full px-3 py-1 font-display uppercase tracking-wide ${
+      className={`rounded-full px-3 py-1 font-semibold ${
         done ? "bg-verde-deep text-on-accent" : "border border-line text-text-soft"
       }`}
     >
       {label} {value}/{max}
     </span>
-  );
-}
-
-function Chip({
-  on,
-  onClick,
-  children,
-}: {
-  on: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-2.5 py-1 font-display text-xs ${
-        on ? "border-verde-deep bg-verde-deep text-on-accent" : "border-line bg-surface text-text-soft"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -423,13 +594,15 @@ function PickedList({
             .sort((a, b) => b.price - a.price)
             .map((r) => (
               <li key={r.id} className="flex items-center gap-2 py-1.5 text-sm">
+                <FlagIcon iso={r.nationality} />
                 <span className="min-w-0 flex-1 truncate">{r.name}</span>
-                <span className="shrink-0 text-xs text-text-soft">{r.price}</span>
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: teamColor(r.team) }} title={r.team ?? undefined} />
+                <span className="w-9 shrink-0 text-right text-xs tabular-nums text-text-soft">{r.price}</span>
                 <button
                   type="button"
                   onClick={() => onRemove(r.id)}
                   aria-label={`Quitar a ${r.name}`}
-                  className="shrink-0 px-1 text-text-soft hover:text-rosa"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-text-soft hover:bg-surface-2 hover:text-rosa"
                 >
                   ×
                 </button>

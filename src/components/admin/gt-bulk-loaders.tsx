@@ -4,6 +4,15 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Spinner from "@/components/spinner";
 import { STAGE_TYPES, normalizeName, type StageType } from "@/lib/grand-tour";
+import { countryIso } from "@/lib/competitions";
+
+// País: código ISO ("es") o nombre en castellano ("España").
+function parseCountry(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const t = raw.trim();
+  if (/^[a-zA-Z]{2}$/.test(t)) return t.toLowerCase();
+  return countryIso(t);
+}
 
 // Cargas "pegando una lista" del admin de una gran vuelta: la lista de
 // salida con precios y el recorrido. Una línea por fila, campos separados
@@ -13,7 +22,7 @@ function splitLine(line: string) {
   return line.split(/;|\t/).map((p) => p.trim());
 }
 
-function useSave(url: string, method: "POST" | "PUT" = "POST") {
+function useSave(url: string, method: "POST" | "PUT" | "DELETE" = "POST") {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "ok" | "error"; text: string } | null>(null);
@@ -23,7 +32,7 @@ function useSave(url: string, method: "POST" | "PUT" = "POST") {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: method === "DELETE" ? undefined : JSON.stringify(body),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -42,12 +51,14 @@ export function GtRidersLoader({ slug }: { slug: string }) {
   const { isPending, feedback, setFeedback, save } = useSave(`/api/competitions/${slug}/gt/riders`);
 
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-  const rows = lines.map(splitLine).map(([name, team, price]) => ({
+  const rows = lines.map(splitLine).map(([name, team, price, country]) => ({
     name: name ?? "",
     team: team ?? "",
     price: price ? Number(price.replace(/\D/g, "")) || null : null,
+    nationality: parseCountry(country),
   }));
   const bad = rows.filter((r) => !r.name || !r.team).length;
+  const clear = useSave(`/api/competitions/${slug}/gt/riders`, "DELETE");
 
   return (
     <div>
@@ -59,8 +70,8 @@ export function GtRidersLoader({ slug }: { slug: string }) {
         className="w-full rounded-2xl border border-line bg-[var(--bg)] px-3.5 py-2 font-mono text-sm text-text outline-none focus:border-verde"
       />
       <p className="mt-1 text-xs text-text-soft">
-        Una línea por corredor: <b>Nombre; Equipo; Precio</b> (el precio es opcional, se puede poner
-        después). Si el corredor ya estaba, se le actualiza el equipo y el precio.
+        Una línea por corredor: <b>Nombre; Equipo; Precio; País</b> (precio y país son opcionales; el
+        país, como «es» o «España»). Si el corredor ya estaba, se le actualizan equipo, precio y país.
       </p>
       <div className="mt-2 flex items-center gap-3">
         <button
@@ -88,6 +99,34 @@ export function GtRidersLoader({ slug }: { slug: string }) {
         {feedback && (
           <span className={`text-xs ${feedback.type === "ok" ? "text-verde-deep" : "text-rosa"}`}>
             {feedback.text}
+          </span>
+        )}
+        <button
+          type="button"
+          disabled={clear.isPending}
+          onClick={() => {
+            if (
+              window.confirm(
+                "¿Vaciar la lista de corredores y equipos de esta competición? Se borran también de las plantillas que ya los tuvieran."
+              )
+            ) {
+              clear.save(null, () => "Lista vaciada.");
+            }
+          }}
+          className="ml-auto rounded-full border border-line px-4 py-2 text-xs text-text-soft hover:border-rosa hover:text-rosa disabled:opacity-40"
+        >
+          {clear.isPending ? (
+            <>
+              <Spinner />
+              Vaciando…
+            </>
+          ) : (
+            "Vaciar lista"
+          )}
+        </button>
+        {clear.feedback && (
+          <span className={`text-xs ${clear.feedback.type === "ok" ? "text-verde-deep" : "text-rosa"}`}>
+            {clear.feedback.text}
           </span>
         )}
       </div>

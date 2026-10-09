@@ -12,10 +12,26 @@ export default function CountryFlag({
 }) {
   const iso = countryIso(team);
   if (!iso) return null;
+  return <FlagIcon iso={iso} className={className} />;
+}
+
+// Bandera a partir del código ISO de 2 letras ('es', 'si'…), para los
+// corredores que tienen la nacionalidad guardada (grandes vueltas).
+export function FlagIcon({
+  iso,
+  className = "",
+  title,
+}: {
+  iso: string | null | undefined;
+  className?: string;
+  title?: string;
+}) {
+  if (!iso || !/^[a-z]{2}$/.test(iso)) return null;
   return (
     <span
-      className={`fi fi-${iso} rounded-[3px] align-[-1px] ${className}`}
-      aria-hidden="true"
+      className={`fi fi-${iso} shrink-0 rounded-[3px] align-[-1px] ${className}`}
+      title={title}
+      aria-hidden={title ? undefined : true}
     />
   );
 }

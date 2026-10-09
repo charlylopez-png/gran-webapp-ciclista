@@ -113,7 +113,7 @@ export default async function GrandTourEquipo({
             key={activeTeam.id}
             riders={data.riders
               .filter((r) => r.active && r.price > 0)
-              .map((r) => ({ id: r.id, name: r.name, team: r.team, price: r.price }))}
+              .map((r) => ({ id: r.id, name: r.name, team: r.team, nationality: r.nationality, price: r.price }))}
             realTeams={data.realTeams}
             initialStarters={roster.starters}
             initialBench={roster.bench}
