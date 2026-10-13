@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
-import { SESSION_COOKIE } from "@/lib/auth";
+import { SESSION_COOKIE } from "@/lib/session-cookie";
 
 // Routes that require an authenticated session at all.
 const PROTECTED_PREFIXES = ["/mi-equipo", "/clasificacion", "/admin", "/pendiente", "/corredores", "/mundial"];

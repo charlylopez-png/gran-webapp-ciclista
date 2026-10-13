@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth";
+import ApprovalCheck from "@/components/approval-check";
 
 export default async function PendientePage() {
   const session = await getSession();
@@ -25,6 +26,8 @@ export default async function PendientePage() {
         clasificación. Mientras tanto puedes consultar el reglamento y el
         calendario.
       </p>
+      {/* Si ya está aprobada, renueva la sesión y entra solo. */}
+      {session && <ApprovalCheck />}
     </div>
   );
 }

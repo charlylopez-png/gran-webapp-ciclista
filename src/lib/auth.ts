@@ -2,8 +2,11 @@ import bcrypt from "bcryptjs";
 import { createHash, randomInt } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { cache } from "react";
+import { sql } from "./db";
 
-export const SESSION_COOKIE = "ukt_session";
+import { SESSION_COOKIE } from "./session-cookie";
+export { SESSION_COOKIE };
 
 const encodedSecret = () => {
   const secret = process.env.JWT_SECRET;
@@ -70,11 +73,38 @@ export async function verifySessionToken(
   }
 }
 
+// La cookie guarda el estado del usuario tal como estaba al entrar, pero el
+// admin puede aprobarlo, rechazarlo o meterlo en el sanedrín después. Por
+// eso, al leer la sesión, rol/estado/sanedrín se toman de la base de datos
+// (una sola consulta por petición gracias a cache): aprobar a alguien surte
+// efecto en cuanto recarga, sin tener que cerrar sesión y volver a entrar.
+const loadUserAccess = cache(async (userId: string) => {
+  const rows = (await sql`
+    select role, status, is_sanedrin, display_name from users where id = ${userId}
+  `) as {
+    role: SessionPayload["role"];
+    status: SessionPayload["status"];
+    is_sanedrin: boolean;
+    display_name: string;
+  }[];
+  return rows[0] ?? null;
+});
+
 export async function getSession(): Promise<SessionPayload | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return verifySessionToken(token);
+  const payload = await verifySessionToken(token);
+  if (!payload) return null;
+  const access = await loadUserAccess(payload.userId);
+  if (!access) return null; // usuario borrado
+  return {
+    ...payload,
+    role: access.role,
+    status: access.status,
+    sanedrin: Boolean(access.is_sanedrin),
+    displayName: access.display_name,
+  };
 }
 
 export async function setSessionCookie(payload: SessionPayload) {
