@@ -55,7 +55,8 @@ export default function CompetitionNav({ items, homeHref }: { items: Competition
     <>
       {/* Ordenador / tableta */}
       <nav className="mt-4 hidden border-b border-line sm:block" aria-label="Secciones">
-        <div className="-mb-px flex items-stretch gap-1 overflow-x-auto">
+        {/* Si no caben en una línea, bajan a la siguiente (sin barra de scroll). */}
+        <div className="-mb-px flex flex-wrap items-stretch gap-x-1">
           {primary.map((item) => (
             <DesktopTab key={item.href} item={item} active={isActive(item.href)} />
           ))}

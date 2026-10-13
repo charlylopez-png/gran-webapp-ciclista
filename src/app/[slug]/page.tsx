@@ -64,8 +64,11 @@ export default async function CompetitionHomePage({
   const events = await getCompetitionEvents(competition.id);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  // Próxima carrera: la primera (por orden) que aún no se ha corrido — con
+  // fecha de hoy en adelante o sin fecha todavía (calendario por confirmar).
+  // Si ya se han corrido todas, la última.
   const nextEvent =
-    events.find((e) => e.event_date && new Date(e.event_date) >= today) ??
+    events.find((e) => !e.event_date || new Date(e.event_date) >= today) ??
     events[events.length - 1] ??
     null;
 
