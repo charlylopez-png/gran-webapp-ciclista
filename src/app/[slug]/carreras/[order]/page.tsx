@@ -17,6 +17,7 @@ import {
   describeComposition,
   formatCoefficient,
   formatEventDate,
+  formatLockDate,
   isPicksLocked,
   squadLabels,
   squadSizeOf,
@@ -178,10 +179,10 @@ export default async function EventDetailPage({
           {hasEventDraft
             ? eventLocked
               ? `${labels.draft} de esta carrera cerrada.`
-              : `${labels.draft} abierta hasta ${formatEventDate(event.picks_lock_at)}.`
+              : `${labels.draft} abierta hasta ${formatLockDate(event.picks_lock_at)}.`
             : eventLocked
             ? "Fichajes de esta carrera cerrados."
-            : `Fichajes de esta carrera abiertos hasta ${formatEventDate(event.picks_lock_at)}.`}
+            : `Fichajes de esta carrera abiertos hasta ${formatLockDate(event.picks_lock_at)}.`}
         </p>
       )}
 

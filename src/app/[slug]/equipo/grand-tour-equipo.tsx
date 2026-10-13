@@ -7,7 +7,7 @@ import {
   type GtConfig,
 } from "@/lib/grand-tour-data";
 import { canSubstitute, computeStandings } from "@/lib/grand-tour";
-import { formatEventDate, isPicksLocked } from "@/lib/competitions";
+import { formatLockDate, isPicksLocked } from "@/lib/competitions";
 import { getActiveTeam } from "@/lib/teams";
 import BudgetSquadSelector from "@/components/budget-squad-selector";
 import SubstitutionPanel, { type PendingSubstitution } from "@/components/substitution-panel";
@@ -78,8 +78,8 @@ export default async function GrandTourEquipo({
       >
         {competition.picks_lock_at
           ? locked
-            ? `Plantillas cerradas el ${formatEventDate(competition.picks_lock_at)}.`
-            : `Cierre de plantillas: ${formatEventDate(competition.picks_lock_at)}.`
+            ? `Plantillas cerradas el ${formatLockDate(competition.picks_lock_at)}.`
+            : `Cierre de plantillas: ${formatLockDate(competition.picks_lock_at)}.`
           : "Fecha de cierre por confirmar."}
       </p>
 

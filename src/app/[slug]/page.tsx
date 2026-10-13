@@ -7,7 +7,7 @@ import { getCompetition, getCompetitionEvents } from "@/lib/competitions-data";
 import { getActiveTeam } from "@/lib/teams";
 import { grandTourConfig } from "@/lib/grand-tour-data";
 import GrandTourHome from "./grand-tour-home";
-import { formatEventDate, isPicksLocked, squadLabels, squadSizeOf } from "@/lib/competitions";
+import { formatEventDate, formatLockDate, isPicksLocked, squadLabels, squadSizeOf } from "@/lib/competitions";
 
 // Inicio de una competición: reglamento en corto, estado del Equipo Base
 // y la próxima carrera (con su fecha y el cierre del Last Draft), para
@@ -138,7 +138,7 @@ export default async function CompetitionHomePage({
               >
                 {isPicksLocked(nextEvent.picks_lock_at)
                   ? `${hasEventDraft ? labels.draftShort : "Fichaje"} cerrado`
-                  : `${hasEventDraft ? labels.draftShort : "Fichaje"} hasta ${formatEventDate(nextEvent.picks_lock_at, "short")}`}
+                  : `${hasEventDraft ? labels.draftShort : "Fichaje"} hasta ${formatLockDate(nextEvent.picks_lock_at, "short")}`}
               </div>
             )}
           </div>

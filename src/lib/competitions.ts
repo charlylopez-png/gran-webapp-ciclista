@@ -168,6 +168,30 @@ export function formatEventDate(
   return `${day} de ${MONTHS_ES_LONG[month - 1]} de ${year}`;
 }
 
+// Fecha y hora de un cierre de fichajes (picks_lock_at, un timestamptz), en
+// hora de Madrid — los cierres se fijan "el día anterior a las 23:00" y así
+// se ve la hora exacta, sin depender de la zona del servidor ni del móvil.
+// "26 de febrero de 2027, 23:00" / corto: "26 feb, 23:00".
+const lockFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Madrid",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+export function formatLockDate(value: string | Date, style: "long" | "short" = "long") {
+  const parts = lockFormatter.formatToParts(new Date(value));
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  const day = Number(get("day"));
+  const month = Number(get("month"));
+  const time = `${get("hour")}:${get("minute")}`;
+  if (style === "short") return `${day} ${MONTHS_ES_SHORT[month - 1]}, ${time}`;
+  return `${day} de ${MONTHS_ES_LONG[month - 1]} de ${get("year")}, ${time}`;
+}
+
 // Los valores numeric de Postgres llegan como string; formatea "1.5" como
 // "×1,5".
 export function formatCoefficient(value: string | number | null | undefined) {

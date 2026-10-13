@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getCompetition } from "@/lib/competitions-data";
-import { isPicksLocked, formatEventDate, squadLabels } from "@/lib/competitions";
+import { isPicksLocked, formatLockDate, squadLabels } from "@/lib/competitions";
 import { getCompetitionTheme } from "@/lib/competition-theme";
 import CobbleBackground from "@/components/cobble-background";
 import { grandTourConfig } from "@/lib/grand-tour-data";
@@ -38,7 +38,7 @@ export default async function CompetitionLayout({
   const lockedText = isGrandTour
     ? "Plantillas cerradas."
     : `Los fichajes del ${labels.base} están cerrados.`;
-  const lockDate = competition.picks_lock_at ? formatEventDate(competition.picks_lock_at) : "";
+  const lockDate = competition.picks_lock_at ? formatLockDate(competition.picks_lock_at) : "";
   const openText = isGrandTour
     ? `Plantillas abiertas hasta ${lockDate}.`
     : `${labels.base} abierto hasta ${lockDate}.`;
