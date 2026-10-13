@@ -266,7 +266,7 @@ export default async function EventDetailPage({
 
           {canDraft ? (
             <div className="mt-4 rounded-2xl bg-surface p-4">
-              <TeamSwitcher teams={teams} activeTeamId={activeTeamId} competitionId={competition.id} />
+              <TeamSwitcher teams={teams} activeTeamId={activeTeamId} competitionId={competition.id} switchOnly />
               <SquadSelector
                 key={activeTeamId}
                 riders={riders}

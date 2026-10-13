@@ -18,10 +18,15 @@ export default function TeamSwitcher({
   teams,
   activeTeamId,
   competitionId,
+  switchOnly = false,
 }: {
   teams: TeamOption[];
   activeTeamId: string;
   competitionId: string;
+  // Pantallas que solo trabajan sobre un equipo ya existente (la
+  // Wedstrijdselectie/Last Draft de una carrera): sin nombre ni "nuevo
+  // equipo", solo el cambio entre equipos si hay más de uno.
+  switchOnly?: boolean;
 }) {
   const router = useRouter();
   const active = teams.find((t) => t.id === activeTeamId) ?? teams[0];
@@ -81,6 +86,34 @@ export default function TeamSwitcher({
   }
 
   const showNameForm = renaming || unnamed;
+
+  if (switchOnly) {
+    if (teams.length <= 1) return null;
+    return (
+      <div className="mb-4">
+        <div className="mb-1.5 text-xs text-text-soft">Fichando para:</div>
+        <div className="flex flex-wrap gap-1.5">
+          {teams.map((team) => (
+            <button
+              key={team.id}
+              type="button"
+              disabled={isPending}
+              onClick={() => switchTo(team.id)}
+              aria-pressed={team.id === activeTeamId}
+              className={`max-w-full truncate rounded-full px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                team.id === activeTeamId
+                  ? "bg-[var(--accent)] text-on-accent"
+                  : "border border-line bg-[var(--bg)] text-text-soft hover:border-[var(--accent)]"
+              }`}
+            >
+              {team.name}
+            </button>
+          ))}
+        </div>
+        {error && <p className="mt-2 text-sm text-rosa">{error}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="mb-4 rounded-2xl border border-line bg-surface p-4">
