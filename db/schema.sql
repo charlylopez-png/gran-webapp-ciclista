@@ -124,6 +124,10 @@ create table if not exists competition_events (
   stars int check (stars between 1 and 5),
   multiplier numeric(3, 2),
   logo_path text,
+  -- Web oficial y cierre del Last Draft de ESTA carrera (distinto del
+  -- picks_lock_at de la competición, que es el del Equipo Base).
+  official_url text,
+  picks_lock_at timestamptz,
   created_at timestamptz not null default now(),
   unique (competition_id, order_num)
 );
@@ -174,6 +178,18 @@ create table if not exists team_event_draft (
 );
 
 create index if not exists idx_team_event_draft_event on team_event_draft (event_id);
+
+-- Kopman (líder) elegido por un equipo para UNA carrera, entre su
+-- Equipo Base o su Last Draft de esa carrera. Solo lo usan las
+-- competiciones squad_color con allows_event_draft (hoy Liga Clásicas):
+-- aplica bonus/penalización en la clasificación general según cómo
+-- acabe ese corredor.
+create table if not exists team_event_kopman (
+  team_id uuid not null references teams (id) on delete cascade,
+  event_id uuid not null references competition_events (id) on delete cascade,
+  competition_rider_id uuid not null references competition_riders (id) on delete cascade,
+  primary key (team_id, event_id)
+);
 
 -- ── Resultados oficiales (squad_color) ───────────────────────────────────
 -- Puesto de cada corredor en cada carrera/prueba (1-20). Sustituye a
@@ -287,6 +303,7 @@ alter table teams enable row level security;
 alter table team_squad enable row level security;
 alter table team_squad_real_teams enable row level security;
 alter table team_event_draft enable row level security;
+alter table team_event_kopman enable row level security;
 alter table event_results enable row level security;
 alter table stage_result_lists enable row level security;
 alter table sprint_pairings enable row level security;
@@ -295,6 +312,17 @@ alter table sprint_pairings enable row level security;
 -- Por carrera: event_result_history (event_id, edition_year, position,
 -- rider_name, team). Para competiciones SIN carreras propias (la general
 -- de una gran vuelta), esta otra tabla, por competición.
+create table if not exists event_result_history (
+  event_id uuid not null references competition_events (id) on delete cascade,
+  edition_year int not null,
+  position int not null check (position between 1 and 20),
+  rider_name text not null,
+  team text,
+  created_at timestamptz not null default now(),
+  primary key (event_id, edition_year, position)
+);
+alter table event_result_history enable row level security;
+
 create table if not exists competition_result_history (
   id uuid primary key default gen_random_uuid(),
   competition_id uuid not null references competitions (id) on delete cascade,
@@ -374,3 +402,20 @@ alter table stage_result_lists add constraint stage_result_lists_list_kind_check
 alter table riders add column if not exists nationality text
   check (nationality is null or nationality ~ '^[a-z]{2}$');
 alter table competition_riders add column if not exists team text;
+
+-- Composición de la plantilla POR CARRERA (Wedstrijdselectie en UKT) —
+-- distinta de squad_composition (Klassiekerkern/Equipo Base, fija toda la
+-- temporada). Solo la rellenan las competiciones con
+-- allows_event_draft = true; en el resto queda null.
+alter table competitions add column if not exists event_squad_composition jsonb;
+
+-- Ficha informativa de la carrera (opcional, cualquier competición):
+-- enlace oficial, imagen de recorrido, distancia/desnivel y notas de los
+-- ascensos clave. Se muestra en el reglamento cuando hay algo que
+-- enseñar — hoy solo la rellena Il Lombardia, pero no es un campo suyo
+-- en exclusiva.
+alter table competitions add column if not exists official_url text;
+alter table competitions add column if not exists route_image_path text;
+alter table competitions add column if not exists route_distance_km numeric(6, 1);
+alter table competitions add column if not exists route_elevation_m int;
+alter table competitions add column if not exists route_notes text;
