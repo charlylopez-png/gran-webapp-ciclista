@@ -230,12 +230,12 @@ export default function GtStageForm({
 
       <section className="grid gap-3 rounded-2xl border border-line bg-surface p-3 sm:grid-cols-[1fr_auto] sm:items-end">
         <label className="flex flex-col gap-1 text-xs text-text-soft">
-          Imagen del perfil oficial (URL)
+          Imagen del perfil oficial (ruta local o URL)
           <input
-            type="url"
+            type="text"
             value={profileImage}
             onChange={(e) => setProfileImage(e.target.value)}
-            placeholder="https://…"
+            placeholder="/stage-profiles/etapa-01.png o https://…"
             className="rounded-full border border-line bg-[var(--bg)] px-3.5 py-2 text-sm text-text outline-none focus:border-verde"
           />
         </label>

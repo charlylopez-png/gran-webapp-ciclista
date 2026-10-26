@@ -14,10 +14,21 @@ import { FINAL_LIST_KINDS, POINTS_TABLE, SCORING_STAGE_KINDS, isTeamList, normal
 // competición; los que no casen se guardan igual pero no puntúan.
 const listKinds = [...SCORING_STAGE_KINDS, ...FINAL_LIST_KINDS] as [ListKind, ...ListKind[]];
 
+// Imagen del perfil: o una ruta local bajo public/ (como el resto de
+// logos de la app, p.ej. /stage-profiles/etapa-01.png) o una URL externa
+// completa.
+const profileImageSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((v) => v.startsWith("/") || /^https?:\/\//.test(v), {
+    message: "Tiene que ser una ruta local (empieza por /) o una URL https://…",
+  });
+
 const BodySchema = z.object({
   lists: z.partialRecord(z.enum(listKinds), z.array(z.string().trim().max(120)).max(20)),
   cancelled: z.boolean(),
-  profileImage: z.url({ protocol: /^https?$/ }).nullable(),
+  profileImage: profileImageSchema.nullable(),
   withdrawn: z.array(z.string().uuid()).max(200),
 });
 
